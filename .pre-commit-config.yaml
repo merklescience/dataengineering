@@ -15,7 +15,7 @@ repos:
   - id: trailing-whitespace
   - id: 'no-commit-to-branch'
     args: ['--branch', 'main']
-    exclude: 'TODO.rst'
+    exclude: '.todo'
 - repo: https://github.com/PyCQA/isort
   rev: 5.10.1
   hooks:

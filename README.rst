@@ -31,3 +31,14 @@ On a deployment server, where you might not have setup the ssh keys:
 
 It goes without saying that you'll need to set the ``GITHUB_TOKEN`` and the
 ``VERSION`` environment variables.
+
+
+-------------------------------
+Development
+-------------------------------
+
+This project uses ``pre-commit`` to enforce certain rules.
+
+1. We use ``black`` for autoformatting code.
+2. We don't support direct commits to the ``main`` branch.
+3. We use ``sphinx`` for documentation, which will be hosted later.
