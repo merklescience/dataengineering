@@ -66,7 +66,11 @@ jobs:
         uses: actions/checkout@v2
       - name: Semantic Release
         run: |
-          pip install python-semantic-release
+          python -m pip install -q -U pip
+          pip install -q python-semantic-release
+          echo "Configuring the local git user name and email to use `github-actions`."
           git config user.name github-actions
           git config user.email github-actions@github.com
+          echo "Publishing Release..."
           semantic-release publish
+          echo "Published release."
