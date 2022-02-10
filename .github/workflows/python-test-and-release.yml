@@ -30,7 +30,7 @@ jobs:
       - name: View poetry version
         run: poetry --version
       - name: Install Dependencies
-        run: python -m poetry install
+        run: python -m poetry install -q
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -47,18 +47,16 @@ jobs:
           token: ${{ github.token }}
       - name: Docstring Coverage
         run: |
-          python -m poetry run interrogate -v --output docs-coverage.txt --fail-under 50 --ignore-init-method --ignore-init-module --ignore-magic --no-color --generate-badge . --badge-format svg
-          if grep -q PASSED docs-coverage.txt; then
-            exit 0
-          else:
-            cat docs-coverage.txt
-            exit 1
+          chmod +x ./scripts/docs-coverage.sh
+          bash scripts/docs-coverage.sh
       - name: Comment with Docs Coverage on PR
         uses: machine-learning-apps/pr-comment@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path: docs-coverage.txt
+      - name: List files
+        run: ls -alrt
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
