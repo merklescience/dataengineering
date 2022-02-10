@@ -30,7 +30,7 @@ jobs:
       - name: View poetry version
         run: poetry --version
       - name: Install Dependencies
-        run: python -m poetry install
+        run: python -m poetry install -q
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
