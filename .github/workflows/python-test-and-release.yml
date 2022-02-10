@@ -63,6 +63,8 @@ jobs:
         with:
           projectBaseDir: dataengineering
           args: >
+            -Dsonar.projectKey=merklescience_dataengineering
+            -Dsonar.organization=merklescience
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.sources=dataengineering/
             -Dsonar.test.exclusions=tests/**
