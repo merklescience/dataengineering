@@ -38,7 +38,7 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           python -m poetry run flake8 . --exclude .venv --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run pytest
-        run: python -m poetry run pytest --cache-clear --cov=streamer tests/ > pytest-coverage.txt
+        run: python -m poetry run pytest --cache-clear --cov-report term --cov-report xml:pytest-coverage.xml --cov=streamer tests/ > pytest-coverage.txt
       - name: Print Pytest Coverage Report
         uses: coroo/pytest-coverage-commentator@v1.0.2
         with:
@@ -46,13 +46,24 @@ jobs:
           pytest-coverage: pytest-coverage.txt
           token: ${{ github.token }}
       - name: Docstring Coverage
-        uses: JackMcKew/python-interrogate-check@v0.1.1
+        run: |
+          python -m poetry run interrogate -v --output docs-coverage.txt --fail-under 50 --ignore-init-method --ignore-init-module --ignore-magic --no-color --generate-badge . --badge-format svg
+          if grep -q PASSED docs-coverage.txt; then
+            exit 0
+          else:
+            cat docs-coverage.txt
+            exit 1
+      - name: Comment with Docs Coverage on PR
+        uses: machine-learning-apps/pr-comment@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path: .
-          fail-under: 50
-          # Generate a `shields.io` status badge (an SVG image) in at a given
-          # file or directory.
-          badge-location: .
+          path: docs-coverage.txt
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   Release:
     needs: Quality
     # only create release if there is a push to main.
