@@ -7,7 +7,7 @@ def test_import():
 
     assert dataengineering.__version__ is not None, "The version string is not defined"
     assert (
-        dataengineering.__doc__ is not none
+        dataengineering.__doc__ is not None
     ), "The documentation string is not defined."
     from dataengineering import utils
 
