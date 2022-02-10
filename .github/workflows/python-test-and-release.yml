@@ -1,0 +1,72 @@
+name: Quality and Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Run Linting checks, Unit Tests, record test and docstring coverage.
+  Quality:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        poetry-version: [1.1.11]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+      - name: Configure Poetry
+        run: python -m poetry config virtualenvs.in-project true
+      - name: View poetry version
+        run: poetry --version
+      - name: Install Dependencies
+        run: python -m poetry install
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          python -m poetry run flake8 . --exclude .venv --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          python -m poetry run flake8 . --exclude .venv --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Run pytest
+        run: python -m poetry run pytest --cache-clear --cov=streamer tests/ > pytest-coverage.txt
+      - name: Print Pytest Coverage Report
+        uses: coroo/pytest-coverage-commentator@v1.0.2
+        with:
+          # This adds a comment with the pytest coverage report.
+          pytest-coverage: pytest-coverage.txt
+          token: ${{ github.token }}
+      - name: Docstring Coverage
+        uses: JackMcKew/python-interrogate-check@v0.1.1
+        with:
+          path: .
+          fail-under: 50
+          # Generate a `shields.io` status badge (an SVG image) in at a given
+          # file or directory.
+          badge-location: .
+  Release:
+    needs: Quality
+    # only create release if there is a push to main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Semantic Release
+        run: |
+          pip install python-semantic-release
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          semantic-release publish
