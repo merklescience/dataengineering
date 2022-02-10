@@ -2,6 +2,10 @@
 Merkle Science ``dataengineering`` Python Library
 ==================================================
 
+.. image:: https://github.com/merklescience/dataengineering/actions/workflows/python-test-and-release.yml/badge.svg
+   :target: https://github.com/merklescience/dataengineering/actions/workflows/python-test-and-release.yml
+   :alt: Quality and Release
+
 This library contains all the utilities that we use in the Data Engineering
 team at Merkle Science.
 
