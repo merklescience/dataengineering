@@ -5,4 +5,4 @@ if grep -q PASSED docs-coverage.txt; then
     exit 0
 else:
     cat docs-coverage.txt
-exit 1
+    exit 1
