@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev]
 
 jobs:
   # Run Linting checks, Unit Tests, record test and docstring coverage.
@@ -32,15 +32,18 @@ jobs:
       - name: Install Dependencies
         run: python -m poetry install -q
       - name: Lint with flake8
+        if: github.event_name == 'pull_request'
         run: |
           # stop the build if there are Python syntax errors or undefined names
           python -m poetry run flake8 . --exclude .venv --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           python -m poetry run flake8 . --exclude .venv --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run pytest
+        if: github.event_name == 'pull_request'
         run: python -m poetry run pytest --cache-clear --cov-report term --cov-report xml:pytest-coverage.xml --cov=streamer tests/ > pytest-coverage.txt
       - name: Print Pytest Coverage Report
         uses: coroo/pytest-coverage-commentator@v1.0.2
+        if: github.event_name == 'pull_request'
         with:
           # This adds a comment with the pytest coverage report.
           pytest-coverage: pytest-coverage.txt
@@ -53,12 +56,12 @@ jobs:
         uses: machine-learning-apps/pr-comment@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'pull_request'
         with:
           path: docs-coverage.txt
-      - name: List files
-        run: ls -alrt
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
