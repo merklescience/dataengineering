@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8]
         poetry-version: [1.1.11]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -38,7 +38,7 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           python -m poetry run flake8 . --exclude .venv --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run pytest
-        run: python -m poetry run pytest --cache-clear --cov-report term --cov-report xml:pytest-coverage.xml --cov=streamer tests/ > pytest-coverage.txt
+        run: python -m poetry run pytest --cache-clear --cov-report term --cov-report xml:pytest-coverage.xml --cov=dataengineering tests/ > pytest-coverage.txt
       - name: Print Pytest Coverage Report
         uses: coroo/pytest-coverage-commentator@v1.0.2
         with:
@@ -50,13 +50,13 @@ jobs:
           chmod +x ./scripts/docs-coverage.sh
           bash scripts/docs-coverage.sh
       - name: Comment with Docs Coverage on PR
+        # only run if this is a PR
+        if: ${{ github.event_name == 'pull_request' }}
         uses: machine-learning-apps/pr-comment@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path: docs-coverage.txt
-      - name: List files
-        run: ls -alrt
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
