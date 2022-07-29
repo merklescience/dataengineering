@@ -28,7 +28,8 @@ def get_query(query_path):
     """
     Returns the contents of file at a filepath
     """
-    query = "".join(open(query_path, "r").readlines())
+    with open(query_path, "r") as f:
+        query = f.read()
     return query
 
 
@@ -45,33 +46,27 @@ def apply_env_variables_on_blob(blob, environment):
     return template.render(**environment)
 
 
-def join_bigquery_queries_in_folder(queries_folder, nested=False, environment=None):
+def join_bigquery_queries_in_folder(queries_folder, environment=None):
     """
     Finds all sql files in a folder and returns a string after adding up all queries
     This works on BigQuery queries
     """
     dags_folder = os.environ.get("DAGS_FOLDER", "/usr/local/airflow/dags")
     full_queries_folder = os.path.join(dags_folder, queries_folder)
+    assert os.path.isdir(full_queries_folder), f"{full_queries_folder} doesn't exist"
     query_filenames = []
-    if not nested:
-        query_filenames = filter(lambda x: "sql" in x, os.listdir(full_queries_folder))
-
-    else:
-        sub_directories = [
-            sub_directory
-            for sub_directory in os.listdir(full_queries_folder)
-            if os.path.isdir(os.path.join(full_queries_folder, sub_directory))
-        ]
-        for sub_directory in sub_directories:
-            sub_directory_path = os.path.join(full_queries_folder, sub_directory)
-            query_filenames.extend(
-                list(filter(lambda x: "sql" in x, os.listdir(sub_directory_path)))
-            )
+    for root, dirs, files in os.walk(full_queries_folder):
+        for file in files:
+            # append the file name to the list
+            file_path = os.path.join(root, file)
+            if os.path.splitext(file_path)[-1] == ".sql":
+                query_filenames.append(os.path.join(root, file))
 
     queries = []
     for query_filename in query_filenames:
         query_path = os.path.join(full_queries_folder, query_filename)
-        query = "".join(open(query_path, "r").readlines())
+        with open(query_path, "r") as f:
+            query = f.read()
         queries.append(query)
 
     template_queries = "\n \n UNION ALL \n \n".join(queries)
