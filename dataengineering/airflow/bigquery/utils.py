@@ -1,5 +1,10 @@
+import os
+
+import jinja2
 from airflow.models import Variable
 from decouple import config
+
+from dataengineering.constants import ServerEnv
 
 
 def build_bigquery_destination(dataset_id, table_id):
@@ -32,9 +37,12 @@ def apply_env_variables_on_blob(blob, environment):
     Replaces all strings of style [[ `key` ]] with `value`
     To be used for templating SQL queries
     """
-    for key, value in environment.items():
-        blob = blob.replace(f"[[ {key} ]]", value)
-    return blob
+    # use the Jinja-native templating and use custom start and end strings
+    # instead
+    template = jinja2.Template(
+        blob, variable_start_string="[[", variable_end_string="]]"
+    )
+    return template.render(**environment)
 
 
 def join_bigquery_queries_in_folder(queries_folder, nested=False, environment=None):
