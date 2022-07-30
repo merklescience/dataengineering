@@ -52,7 +52,7 @@ def variable_get(variable_name):
         ("production", "test-project.prod-dataset.table-name"),
     ],
 )
-def test_build_bigquery_destination_nonproduction(server_env, dest_id):
+def test_build_bigquery_destination(server_env, dest_id):
     """Tests that you can build the exact table name given airflow variables for a non-prod environment"""
     from dataengineering.airflow.bigquery.utils import build_bigquery_destination
 
