@@ -44,9 +44,11 @@ It goes without saying that you'll need to set the ``GITHUB_TOKEN`` and the
 Development
 -------------------------------
 
-1. Create a new virtual environment
-2. Run ``pip install -r requirements-dev.txt``
-3. Run ``pre-commit install``
+This project uses ``pre-commit`` to enforce certain rules. Make sure you
+`install pre-commit <https://pre-commit.com/#install>`_ to use it.
+Additionally, `install poetry <https://python-poetry.org/docs/#installation>`_
+to be able to contribute to it. Note that neither ``poetry`` nor ``pre-commit``
+are requirements for users.
 
 Practices
 ================
