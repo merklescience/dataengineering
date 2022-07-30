@@ -42,9 +42,3 @@ repos:
   - id: rst-backticks
   - id: rst-directive-colons
   - id: rst-inline-touching-normal
-- repo: https://github.com/compilerla/conventional-pre-commit
-  rev: v1.4.0
-  hooks:
-    - id: conventional-pre-commit
-      stages: [commit-msg]
-      args: []
