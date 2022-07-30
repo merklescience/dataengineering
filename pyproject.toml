@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "dataengineering"
+version = "0.2.0"
+description = "Utilities Python module for Data Engineering @ Merkle Science"
+authors = ["Vinay Keerthi <vinay@merklescience.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.7,<3.10"
+toml = "^0.10.2"
+apache-airflow = "^1.10.14"
+pandas-gbq = "^0.10.0"
+psycopg2-binary = "^2.9.1"
+google-cloud-bigtable = "^0.34.0"
+google-auth-httplib2 = "0.0.3"
+google-cloud-storage = "^1.19.1"
+google-api-python-client = "^1.7.11"
+python-decouple = "^3.6"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0.0"
+pytest-cov = "^3.0.0"
+flake8 = "^4.0.1"
+interrogate = "^1.5.0"
+mimesis = "<5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.semantic_release]
+version_variable = [
+    "dataengineering/__init__.py:__version__",
+    "pyproject.toml:version"
+]
+branch = "main"
+upload_to_pypi = false
+upload_to_release = true
+build_command = "pip install poetry && poetry build"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # use https://docs.python.org/3/library/warnings.html#warning-filter
+    # for more filters
+    "ignore::DeprecationWarning",
+]
