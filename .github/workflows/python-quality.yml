@@ -39,7 +39,8 @@ jobs:
           python -m poetry run flake8 . --exclude .venv --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run black to check the code formattin
         run: |
-          python -m poetry run black --check
+          python -m pip install -q -U black
+          python -m black --check
       - name: Run pytest
         run: python -m poetry run pytest --cache-clear --cov-report term --cov-report xml:pytest-coverage.xml --cov=dataengineering tests/ > pytest-coverage.txt
       - name: Print Pytest Coverage Report
