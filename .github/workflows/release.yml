@@ -45,6 +45,10 @@ jobs:
           git config user.email github-actions@github.com
           echo "Building the python package."
           poetry build
+      - name: Strip v prefix from version tag
+        id: set_version_tag
+        run: |
+          echo "::set-output name=version::$(echo '${{ github.ref }}' | cut -dv -f2)"
       - name: Upload Release Asset
         id: upload-release-asset-ubuntu
         uses: actions/upload-release-asset@v1
@@ -52,6 +56,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: dist/dataengineering-${{ github.ref[1:] }}-py3-none-any.whl
-          asset_name: dataengineering-${{ github.ref[1:] }}-py3-none-any.whl
+          asset_path: dist/dataengineering-${{ steps.set_version_tag.outputs.version }}-py3-none-any.whl
+          asset_name: dataengineering-${{ steps.set_version_tag.outputs.version }}-py3-none-any.whl
           asset_content_type: application/octet-stream
