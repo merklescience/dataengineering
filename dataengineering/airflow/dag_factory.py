@@ -21,7 +21,7 @@ class DAGFactory:
         dagrun_timeout,
         start_date,
         schedule_interval,
-        default_args={}
+        default_args=dict()
     ):
         """
         params:
