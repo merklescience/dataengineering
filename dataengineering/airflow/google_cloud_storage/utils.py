@@ -56,17 +56,14 @@ def print_with_carriage_return(s):
 
 
 def upload_to_gcs(bucket, object_name, filename):
-    cloud_storage_hook = GoogleCloudStorageHook(
-        google_cloud_storage_conn_id="google_cloud_default"
-    )
+    cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
     print("Building upload request...")
     response = cloud_storage_hook.upload(
-        bucket=bucket,
-        object=object_name,
+        bucket_name=bucket,
+        object_name=object_name,
         filename=filename,
-        multipart=True,
-        num_retries=5,
+        num_max_attempts=5,
     )
 
     print("\nUpload complete!")
