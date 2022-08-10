@@ -1,4 +1,5 @@
 import json
+import logging
 
 import requests
 from decouple import config
@@ -25,3 +26,5 @@ def task_fail_slack_alert(context):
                 """
 
         requests.post(slack_webhook_url, data=json.dumps({"text": slack_msg}))
+    else:
+        logging.warning(f"Not writing to slack because server_env={server_env}")
