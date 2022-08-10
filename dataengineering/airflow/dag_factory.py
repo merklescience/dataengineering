@@ -36,9 +36,6 @@ class DAGFactory:
         DEFAULT_ARGS = {
             "owner": "analytics",
             "start_date": start_date,
-            "email": ["analytics@merklescience.com"],
-            "email_on_failure": True,
-            "email_on_retry": False,
             "retries": 5,
             "retry_delay": timedelta(minutes=5),
             "catchup": False,
