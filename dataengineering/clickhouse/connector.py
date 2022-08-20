@@ -1,6 +1,7 @@
 """Generic Clickhouse Connector"""
 import subprocess
 import tempfile
+import warnings
 from typing import Callable, Optional, TypeVar, Union
 
 import requests
@@ -118,7 +119,10 @@ class ClickhouseConnector:
         except KeyError as e:
             error_message = f"`{file_format}` is not a valid file format. Choose from either `json`, `csv` or `parquet`"
             raise exceptions.ClickhouseFileFormatError(error_message) from e
-
+        warnings.warn(
+            "The cURL method of sending a file to clickhouse will be deprecated in later versions of this library.",
+            DeprecationWarning,
+        )
         sql = f"INSERT INTO {destination_database}.{destination_table} FORMAT {data_format}"
         with open(file_path) as f:
             logger.error(f.read())
