@@ -64,7 +64,6 @@ class DAGFactory:
             "retry_delay": timedelta(minutes=5),
             "catchup": catchup,
             "depends_on_past": depends_on_past,
-            "max_active_runs": max_active_runs,
             "concurrency": 5,
             "wait_for_downstream": True,
             "on_failure_callback": task_fail_slack_alert,
@@ -80,5 +79,5 @@ class DAGFactory:
             "tags": tags,
         }
 
-        dag = DAG(dag_id, **dagargs)
+        dag = DAG(dag_id, max_active_runs=max_active_runs, **dagargs)
         return dag
