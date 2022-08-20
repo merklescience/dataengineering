@@ -8,3 +8,5 @@ See the project's README for more information regarding the development and usec
 import pkg_resources
 
 __version__ = pkg_resources.get_distribution("dataengineering").version
+
+from .logger import logger
