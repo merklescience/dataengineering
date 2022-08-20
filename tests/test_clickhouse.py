@@ -43,7 +43,7 @@ def test_clickhouse_connector(connector):
 
 
 def test_clickhouse_write_to_database(connector):
-    """"""
+    """Tests that we can write to a database from a CSV file"""
     from mimesis import Address, Business, Person
 
     headers = [
