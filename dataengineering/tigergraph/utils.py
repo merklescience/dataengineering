@@ -4,10 +4,13 @@ from typing import Callable, Union
 
 import numpy as np
 import pandas as pd
+import requests
 
+from dataengineering import chains
 from dataengineering.tigergraph.legacy.utils import (
     form_tg_loading_request,
     loading_map,
+    logger,
     tg_post_request,
 )
 
@@ -80,3 +83,35 @@ def write_chainstate_to_tigergraph(
         ),
         statistic=loading_map["chain_state"]["stats"],
     )
+
+
+def get_chain_state(
+    chain: chains.Chain, tigergraph_url="http://tigergraph.merklescience.com"
+):
+    """Given a chain, it gets the chain state from tigergraph"""
+    url = f"{tigergraph_url}/query/{chain.graphname}/get_chainstate"
+    response = requests.get(url)
+    response.raise_for_status()
+    try:
+        response_json = response.json()
+    except requests.JSONDecodeError as e:
+        logger.debug(response.content)
+        raise e
+    # NOTE: Need to read the value of the payload,
+    # this will be in the following format:
+    # {
+    #      "version": {
+    #          "edition": "enterprise",
+    #          "api":"v2",
+    #          "schema":5
+    #      },
+    #      "error":false,
+    #      "message":"",
+    #      "results":[{
+    #          "@@chainstate": {
+    #              "latest_block_date_time":0,
+    #              "latest_block_number":0 <- this is what we need.
+    #          }
+    #      }]
+    #  }
+    return response_json["results"]["@@chainstate"]
