@@ -16,6 +16,10 @@ repos:
   - id: 'no-commit-to-branch'
     args: ['--branch', 'main']
     exclude: '.todo'
+-   repo: https://github.com/pycqa/flake8
+    rev: '5.0.4'
+    hooks:
+    -   id: flake8
 - repo: https://github.com/PyCQA/isort
   rev: 5.10.1
   hooks:
