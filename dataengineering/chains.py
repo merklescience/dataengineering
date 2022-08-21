@@ -4,17 +4,18 @@ from enum import Enum
 class Chain(Enum):
     """An enum of cryptocurrencies and chains"""
 
+    BinanceSmartChain = "binance-smart-chain"
     Bitcoin = "bitcoin"
     BitcoinCash = "bitcoin-cash"
     BitcoinSv = "bitcoin-sv"
-    BinanceSmartChain = "binance-smart-chain"
     Cardano = "cardano"
     Dogecoin = "dogecoin"
-    Matic = "matic"
     Ethereum = "ethereum"
     Hedera = "hedera"
     Litecoin = "litecoin"
+    Matic = "matic"
     Polkadot = "polkadot"
+    Ripple = "ripple"
     Solana = "solana"
     Stellar = "stellar"
     Tron = "tron"
@@ -23,6 +24,10 @@ class Chain(Enum):
     @property
     def graphname(self):
         """Returns the graphname in tigergraph"""
+        return self.get_internal_name()
+
+    def get_internal_name(self) -> str:
+        """Returns the internal name for a chain/currency"""
         if self == Chain.BinanceSmartChain:
             return "bsc"
         elif self == Chain.BitcoinSv:
@@ -31,3 +36,8 @@ class Chain(Enum):
             return "bitcoin_cash"
         else:
             return self.value
+
+    @property
+    def databasename(self):
+        """Returns the clickhouse database name"""
+        return self.get_internal_name()
