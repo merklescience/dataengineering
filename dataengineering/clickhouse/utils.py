@@ -50,7 +50,7 @@ def get_chain_state(
             # The only way to avoid this is to get the nanosecond-precision txn timestamp,
             # which is in the txn_id
             # select all transactions where the time is the latest timestamp
-            "SELECT replace(substring(transaction_id, 12), '-', '.') as block "
+            "SELECT replace(replaceRegexpOne(transaction_id, '\d\\.\d\\.\d+-', ''), '-', '.') as block "
             "FROM hedera.master WHERE block_date_time >= toDate('{}') "
             "order by block desc limit 1 FORMAT JSON"
         ).format(query_date_str)
