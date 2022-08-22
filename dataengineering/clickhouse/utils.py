@@ -7,11 +7,7 @@ from dataengineering.clickhouse import ClickhouseConnector
 
 
 def get_chain_state(
-    chain: Chain,
-    query_date: Optional[datetime.datetime] = None,
-    database_name: Optional[str] = None,
-    *args,
-    **kwargs
+    chain: Chain, query_date: Optional[datetime.datetime] = None, *args, **kwargs
 ):
     """Returns the chain state of a cryptocurrency"""
     if query_date is None:
@@ -28,7 +24,7 @@ def get_chain_state(
         query = (
             "SELECT MAX(block_number) AS block FROM {}.txns "
             "WHERE block_date_time >= toDate('{}') FORMAT JSON"
-        ).format(chain.clickhouse_database_name, query_date_str)
+        ).format(chain.databasename, query_date_str)
     elif chain in [Chain.Ethereum]:
         query = (
             "SELECT MAX(block_number) AS block FROM ethereum.tld_raw_hot "
@@ -62,7 +58,7 @@ def get_chain_state(
         query = (
             "SELECT max(block) as block from {}.master "
             "WHERE block_date_time >=toDate('{}') FORMAT JSON"
-        ).format(database_name, query_date_str)
+        ).format(chain.databasename, query_date_str)
     connector = ClickhouseConnector(*args, **kwargs)
     result = connector.read(query)
     logger.debug(result)
