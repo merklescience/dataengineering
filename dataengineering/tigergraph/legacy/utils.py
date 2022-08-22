@@ -1,5 +1,6 @@
 import warnings
 
+import pandas as pd
 import requests
 
 from dataengineering import logger
@@ -64,3 +65,44 @@ def tg_post_request(tg_request, data, statistic):
         raise exceptions.NotEnoughValidLinesInValidObjectInTigergraphRequest()
     elif required_statistic[0]["invalidAttribute"] > 1:
         raise exceptions.InvalidAttributeInTigergraphRequest()
+
+
+def transactions_agg(x):
+    """
+    Aggregation logic for daily_transactions loading job on tigergraph.
+    """
+    aggregate = {
+        "external_value": x[x["type"] == 0]["coin_value"].sum(),
+        "external_value_usd": x[x["type"] == 0]["coin_value_usd"].sum(),
+        "block_date": x["block_date_time"].max(),
+        "txn_fee": x["fee"].sum(),
+        "txn_fee_usd": x["fee_usd"].sum(),
+        "internal_value": x[x["type"] == 1]["coin_value"].sum(),
+        "internal_value_usd": x[x["type"] == 1]["coin_value_usd"].sum(),
+        "token_transfer_usd": x[x["type"] == 2]["coin_value_usd"].sum(),
+    }
+    return pd.Series(aggregate)
+
+
+def link_inputs_agg(x):
+    """
+    Aggregation logic for daily_link_inputs loading job on tigergraph.
+    """
+    aggregate = {
+        "value": (
+            x[x["type"].isin([0, 1])]["coin_value"] + x[x["type"].isin([0, 1])]["fee"]
+        ).sum(),
+        "value_usd": (x["coin_value_usd"] + x["fee_usd"]).sum(),
+    }
+    return pd.Series(aggregate)
+
+
+def link_outputs_agg(x):
+    """
+    Aggregation logic for daily_link_outputs loading job on tigergraph.
+    """
+    aggregate = {
+        "value": x[x["type"].isin([0, 1])]["coin_value"].sum(),
+        "value_usd": x["coin_value_usd"].sum(),
+    }
+    return pd.Series(aggregate)
