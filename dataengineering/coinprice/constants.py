@@ -1,6 +1,5 @@
-# TODO: Move these to Doppler
-PRICING_SERVICE_URL = "https://api.mint.palantree.com"
-COINGECKO_URL = "https://api.coingecko.com/api/v3/coins/"
-PRICING_SERVICE_TOKEN = (
-    "aEysW0Up.Gu4hkBGeRqxioa8cSK7CQbS6Z1praqEz"  # os.getenv("BIFROST_ACCESS_TOKEN")
-)
+import os
+
+PRICING_SERVICE_URL = os.getenv("PRICING_SERVICE_URL")
+COINGECKO_URL = os.getenv("COINGECKO_URL")
+PRICING_SERVICE_TOKEN = os.getenv("PRICING_SERVICE_TOKEN")
