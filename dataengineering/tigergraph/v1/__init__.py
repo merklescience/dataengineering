@@ -1,5 +1,6 @@
-"""Tigergraph legacy code
+"""Tigergraph v1 code
 Mostly copied over from `merklescience/airflow-dags/resources/tg`"""
+
 loading_map = {
     "transactions": {"stats": "vertex", "loading_job": "daily_transactions"},
     "link_inputs": {"stats": "edge", "loading_job": "daily_links_inputs"},

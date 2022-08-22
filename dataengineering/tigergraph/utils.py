@@ -7,8 +7,8 @@ import pandas as pd
 import requests
 
 from dataengineering import chains
-from dataengineering.tigergraph.legacy import loading_map
-from dataengineering.tigergraph.legacy.utils import (
+from dataengineering.tigergraph.v1 import loading_map
+from dataengineering.tigergraph.v1.utils import (
     form_tg_loading_request,
     logger,
     tg_post_request,
