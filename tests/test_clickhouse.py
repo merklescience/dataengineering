@@ -130,9 +130,5 @@ def test_clickhouse_chain_state():
     assert isinstance(chain_state, dict), "Error getting the chain state"
     assert "data" in chain_state
     logger.debug(chain_state["data"])
-    assert len(chain_state["data"]) == 1
-    assert "transaction_id" in chain_state["data"][0]
-    assert "block_date_time" in chain_state["data"][0]
-    block_date_time = chain_state["data"][0]["block_date_time"]
-    # check if the block_date_time is a valid datetime
-    block_date_time = datetime.datetime.strptime(block_date_time, "%Y-%m-%d %H:%M:%S")
+    assert len(chain_state["data"]) > 0
+    assert "block" in chain_state["data"][0]
