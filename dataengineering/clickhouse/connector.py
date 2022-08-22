@@ -124,8 +124,6 @@ class ClickhouseConnector:
             DeprecationWarning,
         )
         sql = f"INSERT INTO {destination_database}.{destination_table} FORMAT {data_format}"
-        with open(file_path) as f:
-            logger.error(f.read())
 
         with tempfile.NamedTemporaryFile() as tmp:
             url_escaped_query = pathname2url(sql)
