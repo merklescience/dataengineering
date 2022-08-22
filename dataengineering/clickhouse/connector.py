@@ -107,7 +107,7 @@ class ClickhouseConnector:
         """Writes to a table"""
         from urllib.request import pathname2url
 
-        from dataengineering.clickhouse.legacy.bash_hook import ClickHouseBashHook
+        from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 
         data_format_dict = {
             "parquet": "Parquet",

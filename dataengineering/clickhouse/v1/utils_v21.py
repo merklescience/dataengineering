@@ -4,7 +4,7 @@ import jinja2
 import os
 
 from airflow.models import Variable
-from dataengineering.clickhouse.legacy.utils import format_sql_query, read_file
+from dataengineering.clickhouse.v1.utils import format_sql_query, read_file
 
 
 def read_and_render_file(file_path,
