@@ -6,7 +6,7 @@ import requests
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
 
-from dataengineering.clickhouse.legacy.bash_hook import ClickHouseBashHook
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 from dataengineering.coinprice.constants import (
     PRICING_SERVICE_TOKEN,
     PRICING_SERVICE_URL,
