@@ -79,5 +79,5 @@ class DAGFactory:
             "tags": tags,
         }
 
-        dag = DAG(dag_id, max_active_runs=max_active_runs, **dagargs)
+        dag = DAG(dag_id, **dagargs)
         return dag
