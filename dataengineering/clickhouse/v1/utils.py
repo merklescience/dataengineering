@@ -280,10 +280,10 @@ def _check_file_for_clickhouse_error(filename):
     def check_func(check_type):
         check_type_file = subprocess.Popen([check_type, filename], stdout=subprocess.PIPE)
         check_type_file.wait()
-        grep_content = subprocess.run(["grep", "e.displayText()"], stdin=check_type_file.stdout)
-        grep_content = subprocess.run(["grep", "Exception"], stdin=check_type_file.stdout)
+        grep_content_e_display = subprocess.run(["grep", "e.displayText()"], stdin=check_type_file.stdout)
+        grep_content_exception = subprocess.run(["grep", "Exception"], stdin=check_type_file.stdout)
         check_type_file.terminate()
-        if grep_content.returncode == 0:
+        if grep_content_e_display.returncode == 0 or grep_content_exception == 0:
             raise Exception("Clickhouse query unsuccessfull :",
                             subprocess.run([check_type, filename], stdout=subprocess.PIPE).stdout)
 
