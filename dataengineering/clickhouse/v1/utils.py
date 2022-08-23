@@ -271,7 +271,7 @@ def execute_query(conn_details: dict, sql: str, sql_variables: dict = None, **kw
                 logging.error(f.read())
             raise Exception("Non 0 code returned from curl request " + " ".join(curl_request))
         _check_file_for_clickhouse_error(response_file)
-        return response_file
+    return response_file
 
 
 def _check_file_for_clickhouse_error(filename):
