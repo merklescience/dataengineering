@@ -68,7 +68,6 @@ class DAGFactory:
             "retry_delay": timedelta(minutes=5),
             "catchup": catchup,
             "depends_on_past": depends_on_past,
-            "concurrency": 5,
             "wait_for_downstream": True,
             "on_failure_callback": task_fail_slack_alert,
         }
