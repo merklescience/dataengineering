@@ -23,7 +23,8 @@ class DAGFactory:
         owner,
         end_date=None,
         catchup=False,
-        max_active_runs=1,
+        max_active_runs_per_dag=1,
+        max_active_tasks_per_dag=16,
         depends_on_past=False,
         default_args=dict(),
     ):
@@ -47,10 +48,13 @@ class DAGFactory:
             catchup: (Bool)
                 If you have created a dag today, and start_date is a day in the past, setting catchup
                 to True will ensure historical dag runs are also executed.
-            max_active_runs: (int)
+            max_active_runs_per_dag: (int)
                 The maximum number of dag instances of this DAG which can be running at the same time.
                 This is useful during backfills (coldstarts) when it is required to backfill historical
                 records and we need to backfill a few number of records
+            max_active_tasks_per_dag: (int)
+                The maximum number of tasks that can be scheduled across all instances of a dag run for this
+                DAG
             depends_on_past: (bool)
                 If set to True, the DAG run requires that the previous execution of the DAG was successful
             default_args: (dict)
@@ -77,6 +81,8 @@ class DAGFactory:
             "schedule_interval": schedule_interval,
             "description": description,
             "tags": tags,
+            "max_active_runs_per_dag": max_active_runs_per_dag,
+            "max_active_tasks_per_dag": max_active_tasks_per_dag,
         }
 
         dag = DAG(dag_id, **dagargs)
