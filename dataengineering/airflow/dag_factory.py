@@ -70,6 +70,8 @@ class DAGFactory:
             "depends_on_past": depends_on_past,
             "wait_for_downstream": True,
             "on_failure_callback": task_fail_slack_alert,
+            "max_active_runs": max_active_runs,
+            "max_active_tasks": max_active_tasks,
         }
         if end_date:
             DEFAULT_ARGS["end_date"] = end_date
@@ -80,8 +82,6 @@ class DAGFactory:
             "schedule_interval": schedule_interval,
             "description": description,
             "tags": tags,
-            "max_active_runs": max_active_runs,
-            "max_active_tasks": max_active_tasks,
         }
 
         dag = DAG(dag_id, **dagargs)
