@@ -71,7 +71,7 @@ class DAGFactory:
             "wait_for_downstream": True,
             "on_failure_callback": task_fail_slack_alert,
             "max_active_runs": max_active_runs,
-            "max_active_tasks": max_active_tasks,
+            "concurrency": max_active_tasks,
         }
         if end_date:
             DEFAULT_ARGS["end_date"] = end_date
