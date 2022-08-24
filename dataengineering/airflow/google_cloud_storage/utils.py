@@ -63,7 +63,7 @@ def download_from_gcs(bucket, object, filename):
     cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
     print("Building upload request...")
-    response = cloud_storage_hook.upload(
+    response = cloud_storage_hook.download(
         bucket_name=bucket,
         object_name=object,
         filename=filename,
