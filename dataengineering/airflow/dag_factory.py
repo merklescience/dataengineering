@@ -26,6 +26,7 @@ class DAGFactory:
         max_active_runs=1,
         max_active_tasks=16,
         depends_on_past=False,
+        wait_for_downstream=True,
         default_args=dict(),
     ):
         """
@@ -57,21 +58,19 @@ class DAGFactory:
                 DAG
             depends_on_past: (bool)
                 If set to True, the DAG run requires that the previous execution of the DAG was successful
+            wait_for_downstream: (bool)
+                when set to true, an instance of task X will wait for tasks immediately downstream of the
+                previous instance of task X to finish successfully before it runs.
             default_args: (dict)
                 Other default DAG arguments which are not listed above can passed here
         """
 
         DEFAULT_ARGS = {
             "owner": owner,
-            "start_date": start_date,
             "retries": 5,
             "retry_delay": timedelta(minutes=5),
-            "catchup": catchup,
             "depends_on_past": depends_on_past,
-            "wait_for_downstream": True,
-            "on_failure_callback": task_fail_slack_alert,
-            "max_active_runs": max_active_runs,
-            "concurrency": max_active_tasks,
+            "wait_for_downstream": wait_for_downstream,
         }
         if end_date:
             DEFAULT_ARGS["end_date"] = end_date
@@ -82,6 +81,11 @@ class DAGFactory:
             "schedule_interval": schedule_interval,
             "description": description,
             "tags": tags,
+            "start_date": start_date,
+            "max_active_runs": max_active_runs,
+            "concurrency": max_active_tasks,
+            "on_failure_callback": task_fail_slack_alert,
+            "catchup": catchup,
         }
 
         dag = DAG(dag_id, **dagargs)
