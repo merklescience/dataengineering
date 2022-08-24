@@ -68,7 +68,6 @@ def download_from_gcs(bucket, object, filename):
         object_name=object,
         filename=filename,
         num_max_attempts=5,
-        mime_type=DEFAULT_MIMETYPE,
         chunk_size=CHUNKSIZE,
     )
 
