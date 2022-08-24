@@ -53,43 +53,20 @@ def upload_to_gcs(bucket, object_name, filename):
 
 
 def download_from_gcs(bucket, object, filename):
-    ro_scope = "https://www.googleapis.com/auth/storage.full_control"
-    credentials, _ = google.auth.default(scopes=(ro_scope,))
-    transport = tr_requests.AuthorizedSession(credentials)
+    cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
-    object = object.replace("/", "%2F")
-    filename = open(filename, "wb")
-
-    chunk_size = 10 * 1024 * 1024
-    url_template = (
-        "https://www.googleapis.com/download/storage/v1/b/"
-        "{bucket}/o/{object}?alt=media"
+    print("Building upload request...")
+    response = cloud_storage_hook.upload(
+        bucket_name=bucket,
+        object_name=object,
+        filename=filename,
+        num_max_attempts=5,
+        mime_type=DEFAULT_MIMETYPE,
+        chunk_size=CHUNKSIZE,
     )
-    media_url = url_template.format(bucket=bucket, object=object)
-    logging.info("Downloading file: " + str(media_url))
-    download = RawChunkedDownload(media_url, chunk_size, filename)
-    response = download.consume_next_chunk(transport)
-    logging.info("Response: " + str(response))
 
-    while not download.finished:
-        logging.info(
-            "Bytes downloaded : "
-            + str(download.bytes_downloaded)
-            + " total of "
-            + str(download.total_bytes)
-        )
-        response = download.consume_next_chunk(transport)
-        logging.info("Response: " + str(response))
-    logging.info(
-        "Bytes downloaded : "
-        + str(download.bytes_downloaded)
-        + " total of "
-        + str(download.total_bytes)
-    )
-    logging.info("Response: " + str(response))
-
-    if not download.bytes_downloaded == download.total_bytes:
-        raise ValueError("File downloaded not of same size")
+    print("\nDownload complete!")
+    print(json_dumps(response, indent=2))
 
 
 def build_gcs_bucket(bucket_id):
