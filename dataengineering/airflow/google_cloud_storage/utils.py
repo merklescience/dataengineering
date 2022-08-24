@@ -53,6 +53,13 @@ def upload_to_gcs(bucket, object_name, filename):
 
 
 def download_from_gcs(bucket, object, filename):
+    """
+    This function was refactored in commit
+    https://github.com/merklescience/dataengineering/pull/29/commits/6e5445274e3ad9baac1d579e66254fbc05e71e3b
+
+    If you run into issues with this function while downloading large files,
+    we need a more closer look at this function
+    """
     cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
     print("Building upload request...")
