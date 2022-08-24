@@ -71,6 +71,7 @@ class DAGFactory:
             "retry_delay": timedelta(minutes=5),
             "depends_on_past": depends_on_past,
             "wait_for_downstream": wait_for_downstream,
+            "start_date": start_date,
         }
         if end_date:
             DEFAULT_ARGS["end_date"] = end_date
@@ -81,7 +82,6 @@ class DAGFactory:
             "schedule_interval": schedule_interval,
             "description": description,
             "tags": tags,
-            "start_date": start_date,
             "max_active_runs": max_active_runs,
             "concurrency": max_active_tasks,
             "on_failure_callback": task_fail_slack_alert,
