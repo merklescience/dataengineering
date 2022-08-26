@@ -22,18 +22,31 @@ def make_ch_request(query: str, ch_conn_id: str, exception_msg: str) -> dict:
     :return: query result
     :rtype: dict
     """
-    host, conn_details = ClickHouseBashHook(clickhouse_conn_id=ch_conn_id).get_credentials()
+    host, conn_details = ClickHouseBashHook(
+        clickhouse_conn_id=ch_conn_id
+    ).get_credentials()
     if not host.startswith("http"):
         host = f"http://{host}"
-    resp = requests.get(f"{host}:{conn_details['port']}/{conn_details['database']}",
-                        params={"query": query, "user": conn_details['user'], "password": conn_details['password']})
+    resp = requests.get(
+        f"{host}:{conn_details['port']}/{conn_details['database']}",
+        params={
+            "query": query,
+            "user": conn_details["user"],
+            "password": conn_details["password"],
+        },
+    )
     if resp.status_code != 200:
         raise Exception(exception_msg)
     data = json.loads(resp.content.decode()).get("data")[0]
     return data
 
 
-def get_latest_block_bt(check_db_table: str, bt_ch_conn_id: str, last_sync_block_date: str, blockchain_id: int) -> int:
+def get_latest_block_bt(
+    check_db_table: str,
+    bt_ch_conn_id: str,
+    last_sync_block_date: str,
+    blockchain_id: int,
+) -> int:
     """
     Get the latest block from bitquery cluster.
     :param check_db_table: bitquery table to check for latest block
@@ -47,15 +60,25 @@ def get_latest_block_bt(check_db_table: str, bt_ch_conn_id: str, last_sync_block
     :return: latest block number
     :rtype: int
     """
-    query = f"SELECT max(block) as block from {check_db_table} WHERE tx_date>=toDate('{last_sync_block_date}') " \
-            f"AND blockchain_id={blockchain_id} FORMAT JSON"
-    data = make_ch_request(query=query, ch_conn_id=bt_ch_conn_id,
-                           exception_msg="Latest block number check on BT CH failed")
-    return int(data['block'])
+    query = (
+        f"SELECT max(block) as block from {check_db_table} WHERE tx_date>=toDate('{last_sync_block_date}') "
+        f"AND blockchain_id={blockchain_id} FORMAT JSON"
+    )
+    data = make_ch_request(
+        query=query,
+        ch_conn_id=bt_ch_conn_id,
+        exception_msg="Latest block number check on BT CH failed",
+    )
+    return int(data["block"])
 
 
-def get_latest_block_date_bt(check_db_table: str, bt_ch_conn_id: str, last_sync_block_date: str, latest_block: int,
-                             blockchain_id: int) -> str:
+def get_latest_block_date_bt(
+    check_db_table: str,
+    bt_ch_conn_id: str,
+    last_sync_block_date: str,
+    latest_block: int,
+    blockchain_id: int,
+) -> str:
     """
     Given the latest block number, this fetches the block date time for it. This helps in making optimised queries to
     bitquery clickhouse
@@ -72,15 +95,22 @@ def get_latest_block_date_bt(check_db_table: str, bt_ch_conn_id: str, last_sync_
     :return: block date time for latest block number in 'YYYY-MM-DD' format
     :rtype: str
     """
-    query = f"SELECT max(tx_date) as block_date from {check_db_table}" \
-            f" WHERE tx_date>=toDate('{last_sync_block_date}') AND block={latest_block} AND " \
-            f"blockchain_id={blockchain_id} FORMAT JSON"
-    data = make_ch_request(query=query, ch_conn_id=bt_ch_conn_id,
-                           exception_msg="Latest block date check on BT CH failed")
-    return data['block_date']
+    query = (
+        f"SELECT max(tx_date) as block_date from {check_db_table}"
+        f" WHERE tx_date>=toDate('{last_sync_block_date}') AND block={latest_block} AND "
+        f"blockchain_id={blockchain_id} FORMAT JSON"
+    )
+    data = make_ch_request(
+        query=query,
+        ch_conn_id=bt_ch_conn_id,
+        exception_msg="Latest block date check on BT CH failed",
+    )
+    return data["block_date"]
 
 
-def get_latest_block_ms(chain: str, ms_ch_conn_id: str, last_sync_block_date: str) -> (int, str):
+def get_latest_block_ms(
+    chain: str, ms_ch_conn_id: str, last_sync_block_date: str
+) -> (int, str):
     """
     Get the latest block in the merkle science clickhouse. This becomes last_synced_block for next streaming run.
     Note : this runs 2 queries instead of 1 with 2 max() clauses, as the 2 max can talk about 2 different blocks
@@ -93,16 +123,26 @@ def get_latest_block_ms(chain: str, ms_ch_conn_id: str, last_sync_block_date: st
     :return: latest block number and its block date time
     :rtype: int,str
     """
-    block_query = f"SELECT toDate(max(block_date_time)) as block_date,max(block) as block from {chain}.master" \
-                  f" WHERE toDate(block_date_time)>=toDate('{last_sync_block_date}') FORMAT JSON"
-    block_data = make_ch_request(query=block_query, ch_conn_id=ms_ch_conn_id,
-                                 exception_msg="Latest block number check on MS CH failed")
-    block_date_query = f"SELECT toDate(max(block_date_time)) as block_date from {chain}.master" \
-                       f" WHERE toDate(block_date_time)>=toDate('{last_sync_block_date}') " \
-                       f"AND block={block_data['block']} FORMAT JSON"
-    block_date_data = make_ch_request(query=block_date_query, ch_conn_id=ms_ch_conn_id,
-                                      exception_msg="Latest block date check on MS CH failed")
-    return int(block_data["block"]), block_date_data['block_date']
+    block_query = (
+        f"SELECT toDate(max(block_date_time)) as block_date,max(block) as block from {chain}.master"
+        f" WHERE toDate(block_date_time)>=toDate('{last_sync_block_date}') FORMAT JSON"
+    )
+    block_data = make_ch_request(
+        query=block_query,
+        ch_conn_id=ms_ch_conn_id,
+        exception_msg="Latest block number check on MS CH failed",
+    )
+    block_date_query = (
+        f"SELECT toDate(max(block_date_time)) as block_date from {chain}.master"
+        f" WHERE toDate(block_date_time)>=toDate('{last_sync_block_date}') "
+        f"AND block={block_data['block']} FORMAT JSON"
+    )
+    block_date_data = make_ch_request(
+        query=block_date_query,
+        ch_conn_id=ms_ch_conn_id,
+        exception_msg="Latest block date check on MS CH failed",
+    )
+    return int(block_data["block"]), block_date_data["block_date"]
 
 
 def get_latest_block_tg(chain: str, tg_ip: str) -> (int, str):
@@ -118,15 +158,18 @@ def get_latest_block_tg(chain: str, tg_ip: str) -> (int, str):
     resp = requests.get(f"http://{tg_ip}:9000/query/{chain}/get_chainstate")
     if resp.status_code == 200:
         data = resp.json()["results"][0]["@@chainstate"]
-        return data["latest_block_number"], \
-               dt.datetime.fromtimestamp(data["latest_block_date_time"]).strftime('%Y-%m-%d')
+        return data["latest_block_number"], dt.datetime.fromtimestamp(
+            data["latest_block_date_time"]
+        ).strftime("%Y-%m-%d")
     else:
-        raise Exception(f"Received status code {resp.status_code} with text {resp.text}")
+        raise Exception(
+            f"Received status code {resp.status_code} with text {resp.text}"
+        )
 
 
 def get_variable_name(chain: str, var_prefix: str, database: str = "clickhouse") -> str:
     assert database in ["clickhouse", "tigergraph"]
-    var_start = f"{chain}_{var_prefix}" if var_prefix != '' else f"{chain}"
+    var_start = f"{chain}_{var_prefix}" if var_prefix != "" else f"{chain}"
     if database == "clickhouse":
         var_name = f"{var_start}_streaming_last_synced_block"
     else:
@@ -134,7 +177,9 @@ def get_variable_name(chain: str, var_prefix: str, database: str = "clickhouse")
     return var_name
 
 
-def get_synced_status(chain: str, var_prefix: str = '', database: str = "clickhouse") -> dict:
+def get_synced_status(
+    chain: str, var_prefix: str = "", database: str = "clickhouse"
+) -> dict:
     """
     Get the current sync status from airflow variable
     :param var_prefix: variable prefix for distinguishing multiple dags of same chain on diff end destination
@@ -153,9 +198,18 @@ def get_synced_status(chain: str, var_prefix: str = '', database: str = "clickho
     return sync_status
 
 
-def check_sync_status(chain: str, bt_ch_conn_id: str, streaming_lag: int, blockchain_id: int, check_db_table: str,
-                      batch_size: int = 0, var_prefix: str = '', database: str = "clickhouse", *args,
-                      **kwargs) -> bool:
+def check_sync_status(
+    chain: str,
+    bt_ch_conn_id: str,
+    streaming_lag: int,
+    blockchain_id: int,
+    check_db_table: str,
+    batch_size: int = 0,
+    var_prefix: str = "",
+    database: str = "clickhouse",
+    *args,
+    **kwargs,
+) -> bool:
     """
     This evaluates whether to sync i.e. stream data from bitquery clickhouse to merkle science database
     :param var_prefix: variable prefix for distinguishing multiple dags of same chain on diff end destination
@@ -181,29 +235,56 @@ def check_sync_status(chain: str, bt_ch_conn_id: str, streaming_lag: int, blockc
     :return: true or false for short circuit operator to proceed
     :rtype: bool
     """
-    sync_status = get_synced_status(chain=chain, database=database, var_prefix=var_prefix)
-    last_synced_block = int(sync_status['last_synced_block'])
-    last_synced_block_date = sync_status['last_synced_block_date']
-    latest_block = get_latest_block_bt(check_db_table=check_db_table, bt_ch_conn_id=bt_ch_conn_id,
-                                       last_sync_block_date=last_synced_block_date, blockchain_id=blockchain_id)
+    sync_status = get_synced_status(
+        chain=chain, database=database, var_prefix=var_prefix
+    )
+    last_synced_block = int(sync_status["last_synced_block"])
+    last_synced_block_date = sync_status["last_synced_block_date"]
+    latest_block = get_latest_block_bt(
+        check_db_table=check_db_table,
+        bt_ch_conn_id=bt_ch_conn_id,
+        last_sync_block_date=last_synced_block_date,
+        blockchain_id=blockchain_id,
+    )
     latest_block = latest_block - streaming_lag
     latest_block = min(last_synced_block + batch_size, latest_block)
-    latest_block_date = get_latest_block_date_bt(check_db_table=check_db_table, bt_ch_conn_id=bt_ch_conn_id,
-                                                 latest_block=latest_block,
-                                                 last_sync_block_date=last_synced_block_date,
-                                                 blockchain_id=blockchain_id)
-    logging.info(f"Last synced block : {last_synced_block} and block date :{last_synced_block_date}\n"
-                 f"Latest block :{latest_block} and block date : {latest_block_date}")
+    latest_block_date = get_latest_block_date_bt(
+        check_db_table=check_db_table,
+        bt_ch_conn_id=bt_ch_conn_id,
+        latest_block=latest_block,
+        last_sync_block_date=last_synced_block_date,
+        blockchain_id=blockchain_id,
+    )
+    logging.info(
+        f"Last synced block : {last_synced_block} and block date :{last_synced_block_date}\n"
+        f"Latest block :{latest_block} and block date : {latest_block_date}"
+    )
     if latest_block > last_synced_block:
-        var_name = get_variable_name(chain=chain, database=database, var_prefix=var_prefix)
-        Variable.set(key=var_name, serialize_json=True,
-                     value={"latest_block": latest_block, "latest_block_date": latest_block_date,
-                            "last_synced_block": last_synced_block, "last_synced_block_date": last_synced_block_date})
+        var_name = get_variable_name(
+            chain=chain, database=database, var_prefix=var_prefix
+        )
+        Variable.set(
+            key=var_name,
+            serialize_json=True,
+            value={
+                "latest_block": latest_block,
+                "latest_block_date": latest_block_date,
+                "last_synced_block": last_synced_block,
+                "last_synced_block_date": last_synced_block_date,
+            },
+        )
     return latest_block > last_synced_block
 
 
-def set_latest_block(chain: str, ms_ch_conn_id: str = None, database: str = "clickhouse", tg_ip: str = None,
-                     var_prefix: str = '', *args, **kwargs) -> None:
+def set_latest_block(
+    chain: str,
+    ms_ch_conn_id: str = None,
+    database: str = "clickhouse",
+    tg_ip: str = None,
+    var_prefix: str = "",
+    *args,
+    **kwargs,
+) -> None:
     """
     Update the last_synced_block in the variable for maintaining streaming state
     :param var_prefix: variable prefix for distinguishing multiple dags of same chain on diff end destination
@@ -223,27 +304,50 @@ def set_latest_block(chain: str, ms_ch_conn_id: str = None, database: str = "cli
     :return: None
     :rtype: None
     """
-    assert not ((database == 'tigergraph') and (tg_ip is None)), f"tg ip can't be none when database is {database}"
-    assert not ((database == 'clickhouse') and (
-            ms_ch_conn_id is None)), f"ms_ch_conn_id can't be none when database is {database}"
-    sync_status = get_synced_status(chain=chain, database=database, var_prefix=var_prefix)
-    latest_block = int(sync_status['latest_block'])
-    latest_block_date = sync_status['latest_block_date']
-    last_synced_block_date = sync_status['last_synced_block_date']
-    if database == 'clickhouse':
-        latest_ms_block, latest_ms_block_date = get_latest_block_ms(chain=chain, ms_ch_conn_id=ms_ch_conn_id,
-                                                                    last_sync_block_date=last_synced_block_date)
+    assert not (
+        (database == "tigergraph") and (tg_ip is None)
+    ), f"tg ip can't be none when database is {database}"
+    assert not (
+        (database == "clickhouse") and (ms_ch_conn_id is None)
+    ), f"ms_ch_conn_id can't be none when database is {database}"
+    sync_status = get_synced_status(
+        chain=chain, database=database, var_prefix=var_prefix
+    )
+    latest_block = int(sync_status["latest_block"])
+    latest_block_date = sync_status["latest_block_date"]
+    last_synced_block_date = sync_status["last_synced_block_date"]
+    if database == "clickhouse":
+        latest_ms_block, latest_ms_block_date = get_latest_block_ms(
+            chain=chain,
+            ms_ch_conn_id=ms_ch_conn_id,
+            last_sync_block_date=last_synced_block_date,
+        )
 
     else:
-        latest_ms_block, latest_ms_block_date = get_latest_block_tg(chain=chain, tg_ip=tg_ip)
+        latest_ms_block, latest_ms_block_date = get_latest_block_tg(
+            chain=chain, tg_ip=tg_ip
+        )
     var_name = get_variable_name(chain=chain, database=database, var_prefix=var_prefix)
-    Variable.set(key=var_name, serialize_json=True,
-                 value={"latest_block": latest_block, "latest_block_date": latest_block_date,
-                        "last_synced_block": latest_ms_block, "last_synced_block_date": latest_ms_block_date})
+    Variable.set(
+        key=var_name,
+        serialize_json=True,
+        value={
+            "latest_block": latest_block,
+            "latest_block_date": latest_block_date,
+            "last_synced_block": latest_ms_block,
+            "last_synced_block_date": latest_ms_block_date,
+        },
+    )
 
 
-def validate_bt_bq_counts(chain: str, ch_conn_id: str, ch_check_query: str, bq_table: str = "raw_tld", *args,
-                          **kwargs) -> None:
+def validate_bt_bq_counts(
+    chain: str,
+    ch_conn_id: str,
+    ch_check_query: str,
+    bq_table: str = "raw_tld",
+    *args,
+    **kwargs,
+) -> None:
     """
     This check the row number count between bigquery table and bitquery clickhouse for the data inserted in current
      daily etl run. Raises error if counts don't match exactly.
@@ -262,18 +366,23 @@ def validate_bt_bq_counts(chain: str, ch_conn_id: str, ch_check_query: str, bq_t
     :return: None
     :rtype: None
     """
-    bq_query = f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns " \
-               f"FROM `intelligence-team.crypto_{chain}.{bq_table}` " \
-               f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
+    bq_query = (
+        f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
+        f"FROM `intelligence-team.crypto_{chain}.{bq_table}` "
+        f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
+    )
     client = bigquery.Client()
     bq_result = list(client.query(bq_query).result())
     bq_count = 0
     if bq_result is not None:
         if len(bq_result) > 1:
             raise Exception("More than 1 result from BQ while count check")
-        bq_count = bq_result[0].get('bq_no_of_txns')
-    data = make_ch_request(query=jinja2.Template(ch_check_query).render(ds=kwargs.get('ds')), ch_conn_id=ch_conn_id,
-                           exception_msg="Count check on BT CH failed")
+        bq_count = bq_result[0].get("bq_no_of_txns")
+    data = make_ch_request(
+        query=jinja2.Template(ch_check_query).render(ds=kwargs.get("ds")),
+        ch_conn_id=ch_conn_id,
+        exception_msg="Count check on BT CH failed",
+    )
     if data["total_count"] is None:
         raise Exception("Received none from BT CH in count check")
     logging.info(f"BT CH count:{data['total_count']}")
@@ -282,7 +391,9 @@ def validate_bt_bq_counts(chain: str, ch_conn_id: str, ch_check_query: str, bq_t
         raise Exception("BQ and BT CH count check failed")
 
 
-def run_bq_sqls(sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs) -> None:
+def run_bq_sqls(
+    sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
+) -> None:
     """
     This function is for running bigquery queries which don't return results like DDLs,DMLs,data exports
     :param sql: query, can also pass multiple queries separated via ';'
@@ -298,10 +409,10 @@ def run_bq_sqls(sql: str, project_id: str = None, job_id_prefix: str = None, *ar
     :return:
     :rtype:
     """
-    individual_queries = sql.split(';')
+    individual_queries = sql.split(";")
     client = bigquery.Client(project=project_id)
     for each_query in individual_queries:
-        if each_query == '':
+        if each_query == "":
             continue
         logging.info("Running BQ query " + each_query)
         query_job = client.query(each_query, job_id_prefix=job_id_prefix)
