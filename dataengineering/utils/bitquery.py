@@ -6,7 +6,7 @@ import jinja2
 import requests
 from airflow.models import Variable
 
-from clickhouse.v1.bash_hook import ClickHouseBashHook
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 from google.cloud import bigquery
 
 
