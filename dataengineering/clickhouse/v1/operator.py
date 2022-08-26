@@ -4,9 +4,10 @@ from typing import Optional, Dict, Any
 from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 from airflow.models import BaseOperator, Variable
 
-from blockchain.bitquery.common_utils import get_synced_status
+from dataengineering.airflow.bitquery import get_synced_status
 from dataengineering.coinprice.utils import get_latest_token_prices
 from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
+from dataengineering.clickhouse.v1.requests import execute_sql
 import jinja2
 import pandas as pd
 import requests
@@ -598,3 +599,27 @@ class RippleClickhouseBTStreamingOperator(BaseOperator):
                     **context,
                 )
         os.remove(filename)
+
+
+class ClickhouseExecuteWithURIOperator(BaseOperator):
+    """
+    Airflow operator to run adhoc SQL on the given CH co-ordinate.
+    """
+
+    template_fields = ["sql"]
+
+    def __init__(self, sql: str, user: str, password: str, uri: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sql = sql
+        self.user = user
+        self.password = password
+        self.uri = uri
+
+    def execute(self, context: Dict[str, Any] = None):
+        conn_details = {"host": self.uri, "user": self.user, "password": self.password, "database": "default"}
+        individual_queries = self.sql.split(";")
+        for each_query in individual_queries:
+            if each_query == "":
+                continue
+            logging.info("Executing SQL " + each_query)
+            logging.info(f"Response from query - {execute_sql(each_query, conn_details,auth_type='url')}")
