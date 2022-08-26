@@ -17,12 +17,12 @@ def convert_bytes(num):
     """
     this function will convert bytes to MB.... GB... etc
     """
-    for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+    for x in ["bytes", "KB", "MB", "GB", "TB"]:
         if num < 1024.0:
             return "%3.1f %s" % (num, x)
-        if x != 'TB':
+        if x != "TB":
             num /= 1024.0
-        elif x == 'TB' and num > 1024:
+        elif x == "TB" and num > 1024:
             return "%3.1f %s" % (num, x)
 
 
@@ -36,8 +36,15 @@ def get_file_size(file_path):
 
 
 def upload_to_gcs(bucket, object_name, filename):
-    cloud_storage_hook = GoogleCloudStorageHook(google_cloud_storage_conn_id="google_cloud_default")
-    logging.info("Uploading " + os.path.abspath(filename) + ", the size of file is " + get_file_size(filename))
+    cloud_storage_hook = GoogleCloudStorageHook(
+        google_cloud_storage_conn_id="google_cloud_default"
+    )
+    logging.info(
+        "Uploading "
+        + os.path.abspath(filename)
+        + ", the size of file is "
+        + get_file_size(filename)
+    )
     cloud_storage_hook.upload(bucket=bucket, object=object_name, filename=filename)
 
 
@@ -46,12 +53,31 @@ class ClickhouseGCSOperator(BaseOperator):
     This operator fetches data from Clickhouse and saves the result file in Google Cloud Storage.
     execute function is invoked when operator is invoked/run
     """
-    # The following fields are automatically rendered via airflow if they use airflow macro variables
-    template_fields = ["local_filename", "sql", "sql_variables", "gcs_path", "local_filepath", "gcs_filename"]
 
-    def __init__(self, local_filename: str, gcs_bucket: str, gcs_path: str, sql: str, clickhouse_conn_id: str,
-                 gcs_filename: str = None, sql_variables: dict = None, local_filepath: str = None,
-                 file_format: str = "csv", *args, **kwargs):
+    # The following fields are automatically rendered via airflow if they use airflow macro variables
+    template_fields = [
+        "local_filename",
+        "sql",
+        "sql_variables",
+        "gcs_path",
+        "local_filepath",
+        "gcs_filename",
+    ]
+
+    def __init__(
+        self,
+        local_filename: str,
+        gcs_bucket: str,
+        gcs_path: str,
+        sql: str,
+        clickhouse_conn_id: str,
+        gcs_filename: str = None,
+        sql_variables: dict = None,
+        local_filepath: str = None,
+        file_format: str = "csv",
+        *args,
+        **kwargs,
+    ):
         """
         :param local_filename: local_filename, you might want to keep it a combination of dag_id and other stuff
         :type local_filename: str
@@ -90,15 +116,23 @@ class ClickhouseGCSOperator(BaseOperator):
         self.gcs_filename = gcs_filename if gcs_filename is not None else local_filename
 
     def execute(self, context: Dict[str, Any] = None) -> None:
-        filepath = os.path.join(self.local_filepath,
-                                self.local_filename) if self.local_filepath else self.local_filename
-        filepath = filepath + f'.{self.file_format}'
+        filepath = (
+            os.path.join(self.local_filepath, self.local_filename)
+            if self.local_filepath
+            else self.local_filename
+        )
+        filepath = filepath + f".{self.file_format}"
         if os.path.isfile(filepath):
             os.remove(filepath)
-        self.ch_hook.get_results_file(sql=self.sql, filename=filepath, file_format=self.file_format, **context)
+        self.ch_hook.get_results_file(
+            sql=self.sql, filename=filepath, file_format=self.file_format, **context
+        )
         logging.info("Got file from BT CH, uploading to GCS")
-        upload_to_gcs(bucket=self.gcs_bucket, object_name=self.gcs_path + self.gcs_filename + f'.{self.file_format}',
-                      filename=filepath)
+        upload_to_gcs(
+            bucket=self.gcs_bucket,
+            object_name=self.gcs_path + self.gcs_filename + f".{self.file_format}",
+            filename=filepath,
+        )
         os.remove(filepath)
 
 
@@ -107,11 +141,23 @@ class ClickhouseGCStoCHOperator(BaseOperator):
     This operator fetches single file on GCS and inserts them to Clickhouse.
     execute function is invoked when operator is invoked/run
     """
+
     # The following fields are automatically rendered via airflow if they use airflow macro variables
     template_fields = ["gcs_path", "gcs_filename", "table", "local_filename"]
 
-    def __init__(self, gcs_bucket: str, gcs_path: str, database: str, table: str, clickhouse_conn_id: str,
-                 local_filename: str, gcs_filename: str = None, file_format: str = "parquet", *args, **kwargs):
+    def __init__(
+        self,
+        gcs_bucket: str,
+        gcs_path: str,
+        database: str,
+        table: str,
+        clickhouse_conn_id: str,
+        local_filename: str,
+        gcs_filename: str = None,
+        file_format: str = "parquet",
+        *args,
+        **kwargs,
+    ):
         """
 
         :param gcs_bucket: bucket where file is saved
@@ -148,10 +194,20 @@ class ClickhouseGCStoCHOperator(BaseOperator):
     def execute(self, context: Dict[str, Any] = None) -> None:
         if os.path.isfile(self.local_filename):
             os.remove(self.local_filename)
-        GoogleCloudStorageHook(google_cloud_storage_conn_id="google_cloud_default") \
-            .download(bucket=self.gcs_bucket, object=self.gcs_path + self.gcs_filename, filename=self.local_filename)
-        self.ch_hook.run_insert_job(database=self.database, table=self.table, filename=self.local_filename,
-                                    file_format=self.file_format, **context)
+        GoogleCloudStorageHook(
+            google_cloud_storage_conn_id="google_cloud_default"
+        ).download(
+            bucket=self.gcs_bucket,
+            object=self.gcs_path + self.gcs_filename,
+            filename=self.local_filename,
+        )
+        self.ch_hook.run_insert_job(
+            database=self.database,
+            table=self.table,
+            filename=self.local_filename,
+            file_format=self.file_format,
+            **context,
+        )
         os.remove(self.local_filename)
 
 
@@ -162,11 +218,20 @@ class ClickhouseLocalFiletoCHOperator(BaseOperator):
     worker don't share the filesystem.
     execute function is invoked when operator is invoked/run
     """
+
     # The following fields are automatically rendered via airflow if they use airflow macro variables
     template_fields = ["table", "local_filename"]
 
-    def __init__(self, database: str, table: str, clickhouse_conn_id: str, local_filename: str,
-                 file_format: str = "parquet", *args, **kwargs):
+    def __init__(
+        self,
+        database: str,
+        table: str,
+        clickhouse_conn_id: str,
+        local_filename: str,
+        file_format: str = "parquet",
+        *args,
+        **kwargs,
+    ):
         """
 
         :param database: target database to insert file data
@@ -192,8 +257,13 @@ class ClickhouseLocalFiletoCHOperator(BaseOperator):
         self.file_format = file_format
 
     def execute(self, context: Dict[str, Any] = None) -> None:
-        self.ch_hook.run_insert_job(database=self.database, table=self.table, filename=self.local_filename,
-                                    file_format=self.file_format, **context)
+        self.ch_hook.run_insert_job(
+            database=self.database,
+            table=self.table,
+            filename=self.local_filename,
+            file_format=self.file_format,
+            **context,
+        )
         print(self.local_filename)
         os.remove(self.local_filename)
         print("Does local file exist: ", os.path.exists(self.local_filename))
@@ -205,11 +275,21 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
     from big query which generally ends up with multiple files in a folder.
     execute function is invoked when operator is invoked/run
     """
+
     # The following fields are automatically rendered via airflow if they use airflow macro variables
     template_fields = ["gcs_path", "table"]
 
-    def __init__(self, gcs_bucket: str, gcs_path: str, database: str, table: str, clickhouse_conn_id: str,
-                 file_format: str = "parquet", *args, **kwargs):
+    def __init__(
+        self,
+        gcs_bucket: str,
+        gcs_path: str,
+        database: str,
+        table: str,
+        clickhouse_conn_id: str,
+        file_format: str = "parquet",
+        *args,
+        **kwargs,
+    ):
         """
 
         :param gcs_bucket: bucket on gcs
@@ -239,17 +319,26 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
 
     def execute(self, context: Dict[str, Any] = None) -> None:
         ch_hook = ClickHouseBashHook(clickhouse_conn_id=self.clickhouse_conn_id)
-        gcs_hook = GoogleCloudStorageHook(google_cloud_storage_conn_id="google_cloud_default")
-        dag_id = context.get('task_instance').dag_id
-        task_id = context.get('task_instance').task_id
+        gcs_hook = GoogleCloudStorageHook(
+            google_cloud_storage_conn_id="google_cloud_default"
+        )
+        dag_id = context.get("task_instance").dag_id
+        task_id = context.get("task_instance").task_id
         files = gcs_hook.list(bucket=self.gcs_bucket, prefix=self.gcs_path)
         for file in files:
-            filename = f"{dag_id}_{task_id}_{context.get('ds_nodash')}_{file}".replace(self.gcs_path, "")
+            filename = f"{dag_id}_{task_id}_{context.get('ds_nodash')}_{file}".replace(
+                self.gcs_path, ""
+            )
             if os.path.isfile(filename):
                 os.remove(filename)
             gcs_hook.download(bucket=self.gcs_bucket, object=file, filename=filename)
-            ch_hook.run_insert_job(database=self.database, table=self.table, filename=filename,
-                                   file_format=self.file_format, **context)
+            ch_hook.run_insert_job(
+                database=self.database,
+                table=self.table,
+                filename=filename,
+                file_format=self.file_format,
+                **context,
+            )
             os.remove(filename)
 
 
@@ -258,6 +347,7 @@ class ClickhouseExecuteOperator(BaseOperator):
     This operator is meant to execute sql queries which don't end up in result files like DDLs and DMLs.
     execute function is invoked when operator is invoked/run
     """
+
     # The following fields are automatically rendered via airflow if they use airflow macro variables
     template_fields = ["sql"]
 
@@ -288,9 +378,20 @@ class ClickhouseBTStreamingOperator(BaseOperator):
     execute function is invoked when operator is invoked/run
     """
 
-    def __init__(self, chain: str, sql: str, log_index: bool, sort_columns: list or dict, bt_ch_conn_id: str,
-                 ms_ch_conn_id: str, insert_tables: list = None, gcs_upload: bool = False,
-                 log_index_column: str = 'transaction_id', *args, **kwargs):
+    def __init__(
+        self,
+        chain: str,
+        sql: str,
+        log_index: bool,
+        sort_columns: list or dict,
+        bt_ch_conn_id: str,
+        ms_ch_conn_id: str,
+        insert_tables: list = None,
+        gcs_upload: bool = False,
+        log_index_column: str = "transaction_id",
+        *args,
+        **kwargs,
+    ):
         """
         :param chain: blockchain
         :type chain: str
@@ -329,14 +430,18 @@ class ClickhouseBTStreamingOperator(BaseOperator):
 
     def execute(self, context: dict) -> None:
         block_data = get_synced_status(chain=self.chain)
-        sql = jinja2.Template(self.sql).render(last_synced_block=block_data["last_synced_block"],
-                                               latest_block=block_data["latest_block"],
-                                               last_synced_block_date=block_data["last_synced_block_date"],
-                                               latest_block_date=block_data["latest_block_date"])
+        sql = jinja2.Template(self.sql).render(
+            last_synced_block=block_data["last_synced_block"],
+            latest_block=block_data["latest_block"],
+            last_synced_block_date=block_data["last_synced_block_date"],
+            latest_block_date=block_data["latest_block_date"],
+        )
         filename = f"{context.get('task_instance').dag_id}_{block_data['last_synced_block']}.csv"
         if os.path.isfile(filename):
             os.remove(filename)
-        self.bt_ch_hook.get_results_file(sql=sql, filename=filename, file_format="csv", **context)
+        self.bt_ch_hook.get_results_file(
+            sql=sql, filename=filename, file_format="csv", **context
+        )
         df = pd.read_csv(filename)
         if self.log_index:
             if len(self.sort_columns) == 0:
@@ -344,12 +449,27 @@ class ClickhouseBTStreamingOperator(BaseOperator):
             if isinstance(self.sort_columns, list):
                 df.sort_values(self.sort_columns, inplace=True)
             if isinstance(self.sort_columns, dict):
-                df.sort_values(list(self.sort_columns.keys()), ascending=list(self.sort_columns.values()), inplace=True)
-            df['log_index'] = df.groupby(self.log_index_column)[self.log_index_column].rank(method='first').astype(int)
+                df.sort_values(
+                    list(self.sort_columns.keys()),
+                    ascending=list(self.sort_columns.values()),
+                    inplace=True,
+                )
+            df["log_index"] = (
+                df.groupby(self.log_index_column)[self.log_index_column]
+                .rank(method="first")
+                .astype(int)
+            )
         metadata = self._get_tokens_metadata()
-        token_prices = get_latest_token_prices(symbols=list(metadata['symbol'].unique()))
+        token_prices = get_latest_token_prices(
+            symbols=list(metadata["symbol"].unique())
+        )
         metadata = pd.merge(metadata, token_prices, on="symbol", how="left")
-        df = pd.merge(df, metadata[["token_address", "coin_price_usd", "decimals"]], on="token_address", how="inner")
+        df = pd.merge(
+            df,
+            metadata[["token_address", "coin_price_usd", "decimals"]],
+            on="token_address",
+            how="inner",
+        )
         df["coin_value"] = df["coin_value"].astype(float)
         df.loc[df["type"].isin([0, 1]), "decimals"] = 0
         df["coin_value"] = df["coin_value"] / (10 ** df["decimals"])
@@ -360,8 +480,13 @@ class ClickhouseBTStreamingOperator(BaseOperator):
         del df, metadata, token_prices
         if self.insert_tables is not None:
             for tab in self.insert_tables:
-                self.ms_ch_hook.run_insert_job(database=self.chain, table=tab, filename=filename, file_format='csv',
-                                               **context)
+                self.ms_ch_hook.run_insert_job(
+                    database=self.chain,
+                    table=tab,
+                    filename=filename,
+                    file_format="csv",
+                    **context,
+                )
         os.remove(filename)
 
     def _get_tokens_metadata(self) -> pd.DataFrame:
@@ -371,16 +496,25 @@ class ClickhouseBTStreamingOperator(BaseOperator):
         :return: pandas dataframe with symbol,token_address,decimals column
         :rtype: pd.DataFrame
         """
-        tokens_metadata_table = f"{self.chain}.tokens_metadata" if ord(self.chain[0]) < ord("s") \
+        tokens_metadata_table = (
+            f"{self.chain}.tokens_metadata"
+            if ord(self.chain[0]) < ord("s")
             else f"aal_dictionaries.{self.chain}_tokens_metadata"
+        )
         query = f"select symbol,address as token_address,decimals from {tokens_metadata_table} FORMAT JSON"
         host, conn_details = self.ms_ch_hook.get_credentials()
-        resp = requests.get(f"http://{host}:{conn_details['port']}/{conn_details['database']}",
-                            params={"query": query,
-                                    "user": conn_details['user'],
-                                    "password": conn_details['password']})
+        resp = requests.get(
+            f"http://{host}:{conn_details['port']}/{conn_details['database']}",
+            params={
+                "query": query,
+                "user": conn_details["user"],
+                "password": conn_details["password"],
+            },
+        )
         if resp.status_code != 200:
-            raise Exception(f"Status code {resp.status_code} received from MS CH instead of 200")
+            raise Exception(
+                f"Status code {resp.status_code} received from MS CH instead of 200"
+            )
 
         data = json.loads(resp.content.decode())
         return pd.DataFrame(data["data"])
@@ -393,8 +527,16 @@ class RippleClickhouseBTStreamingOperator(BaseOperator):
     execute function is invoked when operator is invoked/run
     """
 
-    def __init__(self, chain: str, sql: str, bt_ch_conn_id: str, ms_ch_conn_id: str, insert_tables: list = None, *args,
-                 **kwargs):
+    def __init__(
+        self,
+        chain: str,
+        sql: str,
+        bt_ch_conn_id: str,
+        ms_ch_conn_id: str,
+        insert_tables: list = None,
+        *args,
+        **kwargs,
+    ):
         """
         :param chain: blockchain
         :type chain: str
@@ -420,25 +562,39 @@ class RippleClickhouseBTStreamingOperator(BaseOperator):
 
     def execute(self, context: dict) -> None:
         block_data = get_synced_status(chain=self.chain)
-        sql = jinja2.Template(self.sql).render(last_synced_block=block_data["last_synced_block"],
-                                               latest_block=block_data["latest_block"],
-                                               last_synced_block_date=block_data["last_synced_block_date"],
-                                               latest_block_date=block_data["latest_block_date"])
+        sql = jinja2.Template(self.sql).render(
+            last_synced_block=block_data["last_synced_block"],
+            latest_block=block_data["latest_block"],
+            last_synced_block_date=block_data["last_synced_block_date"],
+            latest_block_date=block_data["latest_block_date"],
+        )
         filename = f"{context.get('task_instance').dag_id}_{block_data['last_synced_block']}.csv"
         if os.path.isfile(filename):
             os.remove(filename)
-        self.bt_ch_hook.get_results_file(sql=sql, filename=filename, file_format="csv", **context)
+        self.bt_ch_hook.get_results_file(
+            sql=sql, filename=filename, file_format="csv", **context
+        )
         df = pd.read_csv(filename)
         token_prices = get_latest_token_prices(symbols=["XRP"])
         token_prices["token_address"] = "0x0000"
         df["token_address"] = "0x0000"
-        df = pd.merge(df, token_prices[["token_address", "coin_price_usd"]], on="token_address", how="inner")
-        df.drop(columns=['token_address'], inplace=True)
+        df = pd.merge(
+            df,
+            token_prices[["token_address", "coin_price_usd"]],
+            on="token_address",
+            how="inner",
+        )
+        df.drop(columns=["token_address"], inplace=True)
         df["coin_value"] = df["coin_value"].astype(float)
         df.to_csv(filename, index=False)
         del df, token_prices
         if self.insert_tables is not None:
             for tab in self.insert_tables:
-                self.ms_ch_hook.run_insert_job(database=self.chain, table=tab, filename=filename, file_format='csv',
-                                               **context)
+                self.ms_ch_hook.run_insert_job(
+                    database=self.chain,
+                    table=tab,
+                    filename=filename,
+                    file_format="csv",
+                    **context,
+                )
         os.remove(filename)

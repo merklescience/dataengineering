@@ -21,8 +21,14 @@ class CHRpcInsertException(Exception):
     pass
 
 
-def execute_insert_sql(sql: str, payload_file_path: str, ch_conn: Dict[str, str], timeout=2700, batch_count=50000,
-                       data_format: str = "JSONEachRow") -> str:
+def execute_insert_sql(
+    sql: str,
+    payload_file_path: str,
+    ch_conn: Dict[str, str],
+    timeout=2700,
+    batch_count=50000,
+    data_format: str = "JSONEachRow",
+) -> str:
     """
     Ingest 50k lines at a time from `payload_file_path` to CH as insert
     sql and returns the status msg throw CHRpcInsertException otherwise.
@@ -83,8 +89,12 @@ def execute_insert_sql(sql: str, payload_file_path: str, ch_conn: Dict[str, str]
                         data=payload_data,
                         params=params,
                     )
-                    logging.info(f"payload URL {url} & CSV lines processed {len(n_lines)} (excluding header)")
-                    logging.info(f"running sql query {sql} {str(response.content)} - {response.status_code}")
+                    logging.info(
+                        f"payload URL {url} & CSV lines processed {len(n_lines)} (excluding header)"
+                    )
+                    logging.info(
+                        f"running sql query {sql} {str(response.content)} - {response.status_code}"
+                    )
                     try:
                         response.raise_for_status()
                     except Exception as e:
@@ -92,7 +102,9 @@ def execute_insert_sql(sql: str, payload_file_path: str, ch_conn: Dict[str, str]
                         write_complete = False
                         break
                 else:
-                    exception_trace = f"Failed to import due to empty payload {payload_data}"
+                    exception_trace = (
+                        f"Failed to import due to empty payload {payload_data}"
+                    )
                     write_complete = False
                     break
             else:
@@ -106,8 +118,13 @@ def execute_insert_sql(sql: str, payload_file_path: str, ch_conn: Dict[str, str]
         return f"Completed import to table"
 
 
-def execute_sql(sql: str, ch_conn: Dict[str, str], raw_response: bool = False, timeout=2700,
-                auth_type: str = "headers") -> Union[Response, str]:
+def execute_sql(
+    sql: str,
+    ch_conn: Dict[str, str],
+    raw_response: bool = False,
+    timeout=2700,
+    auth_type: str = "headers",
+) -> Union[Response, str]:
     """
     captures the response for a CH sql.
     :param `sql`
@@ -130,10 +147,14 @@ def execute_sql(sql: str, ch_conn: Dict[str, str], raw_response: bool = False, t
     else:
         url = f"http://{ch_host}:{ch_port}/{ch_db}?query={pathname2url(sql)}"
     if auth_type == "url":
-        response = requests.post(f"{url}&user={ch_user}&password={ch_pwd}", verify=False, timeout=timeout)
+        response = requests.post(
+            f"{url}&user={ch_user}&password={ch_pwd}", verify=False, timeout=timeout
+        )
     else:
-        response = requests.post(url, verify=False, timeout=timeout,headers=headers)
-    logging.info(f"running sql query {sql} {str(response.content)} - {response.status_code}")
+        response = requests.post(url, verify=False, timeout=timeout, headers=headers)
+    logging.info(
+        f"running sql query {sql} {str(response.content)} - {response.status_code}"
+    )
     try:
         response.raise_for_status()
         strResponse = str(response.content)
