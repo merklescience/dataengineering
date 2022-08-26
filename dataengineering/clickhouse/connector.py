@@ -31,6 +31,7 @@ class ClickhouseConnector:
         use_https: bool = False,
         database: Optional[str] = None,
         port: Optional[int] = None,
+        **_,
     ) -> None:
         self.host = host
         self.port = port
@@ -107,7 +108,7 @@ class ClickhouseConnector:
         """Writes to a table"""
         from urllib.request import pathname2url
 
-        from dataengineering.clickhouse.legacy.bash_hook import ClickHouseBashHook
+        from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 
         data_format_dict = {
             "parquet": "Parquet",
@@ -124,8 +125,6 @@ class ClickhouseConnector:
             DeprecationWarning,
         )
         sql = f"INSERT INTO {destination_database}.{destination_table} FORMAT {data_format}"
-        with open(file_path) as f:
-            logger.error(f.read())
 
         with tempfile.NamedTemporaryFile() as tmp:
             url_escaped_query = pathname2url(sql)
