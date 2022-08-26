@@ -31,6 +31,7 @@ class ClickhouseConnector:
         use_https: bool = False,
         database: Optional[str] = None,
         port: Optional[int] = None,
+        **_,
     ) -> None:
         self.host = host
         self.port = port
