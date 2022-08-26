@@ -1,0 +1,61 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+env:
+  CARGO_TERM_COLOR: always
+
+name: Build and Release
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url}}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+  upload_release:
+    name: Upload Release Assets
+    needs: create_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Build package
+        run: |
+          python -m pip install -q -U pip
+          python -m pip install -q -U poetry
+          echo "Configuring the local git user name and email to use `github-actions`."
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          echo "Building the python package."
+          poetry build
+      - name: Strip v prefix from version tag
+        id: set_version_tag
+        run: |
+          echo "::set-output name=version::$(echo '${{ github.ref }}' | cut -dv -f2)"
+      - name: Upload Release Asset
+        id: upload-release-asset-ubuntu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: dist/dataengineering-${{ steps.set_version_tag.outputs.version }}-py3-none-any.whl
+          asset_name: dataengineering-${{ steps.set_version_tag.outputs.version }}-py3-none-any.whl
+          asset_content_type: application/octet-stream

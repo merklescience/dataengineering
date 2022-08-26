@@ -1,13 +1,12 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.1.0
+  rev: v4.3.0
   hooks:
   - id: check-added-large-files
   - id: check-ast
   - id: check-executables-have-shebangs
   - id: check-json
   - id: check-toml
-  - id: check-yaml
   - id: debug-statements
   - id: detect-private-key
   - id: end-of-file-fixer
@@ -16,16 +15,20 @@ repos:
   - id: 'no-commit-to-branch'
     args: ['--branch', 'main']
     exclude: '.todo'
+-   repo: https://github.com/pycqa/flake8
+    rev: '5.0.4'
+    hooks:
+    -   id: flake8
 - repo: https://github.com/PyCQA/isort
   rev: 5.10.1
   hooks:
   - id: isort
     args: ["--profile", "black"]
 - repo: https://github.com/ambv/black
-  rev: 22.1.0
+  rev: 22.6.0
   hooks:
   - id: black
-    language_version: python3.9
+    language_version: python3
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: v1.9.0
   hooks:
@@ -33,7 +36,7 @@ repos:
   - id: rst-directive-colons
   - id: rst-inline-touching-normal
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.8.0
+  rev: v2.10.0
   hooks:
     - id: hadolint
 - repo: https://github.com/pre-commit/pygrep-hooks
@@ -42,9 +45,3 @@ repos:
   - id: rst-backticks
   - id: rst-directive-colons
   - id: rst-inline-touching-normal
-- repo: https://github.com/compilerla/conventional-pre-commit
-  rev: v1.2.0
-  hooks:
-    - id: conventional-pre-commit
-      stages: [commit-msg]
-      args: []

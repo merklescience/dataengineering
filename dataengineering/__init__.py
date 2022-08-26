@@ -5,4 +5,8 @@ This includes, but is not limited to, utility functions and Apache Airflow opera
 
 See the project's README for more information regarding the development and usecases.
 """
-__version__ = "0.1.0"
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("dataengineering").version
+
+from .logger import logger
