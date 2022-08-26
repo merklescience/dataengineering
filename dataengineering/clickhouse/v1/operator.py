@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 from airflow.models import BaseOperator, Variable
 
-from dataengineering.utils.bitquery import get_synced_status
+from dataengineering.airflow.bitquery import get_synced_status
 from dataengineering.coinprice.utils import get_latest_token_prices
 from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 from dataengineering.clickhouse.v1.requests import execute_sql
