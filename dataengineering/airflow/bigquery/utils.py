@@ -75,6 +75,7 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
         return apply_env_variables_on_blob(template_queries, environment)
     return template_queries
 
+
 def format_sql_query(sql, environment):
     """
     to render templated  BQ query
@@ -85,5 +86,5 @@ def format_sql_query(sql, environment):
 
     for key, value in environment.items():
         if isinstance(key, str) and isinstance(value, str):
-            sql = sql.replace(f'[[ {key} ]]', value)
+            sql = sql.replace(f"[[ {key} ]]", value)
     return sql
