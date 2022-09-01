@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev]
 
 jobs:
   # Run Linting checks, Unit Tests, record test and docstring coverage.
@@ -32,6 +32,7 @@ jobs:
       - name: Install Dependencies
         run: python -m poetry install -q
       - name: Lint with flake8
+        if: github.event_name == 'pull_request'
         run: |
           # install flake8 explicitly.
           python -m pip install -q -U flake8
@@ -47,6 +48,7 @@ jobs:
         run: python -m poetry run pytest --cache-clear --cov-report term --cov-report xml:pytest-coverage.xml --cov=dataengineering tests/ > pytest-coverage.txt
       - name: Print Pytest Coverage Report
         uses: coroo/pytest-coverage-commentator@v1.0.2
+        if: github.event_name == 'pull_request'
         with:
           # This adds a comment with the pytest coverage report.
           pytest-coverage: pytest-coverage.txt
@@ -61,10 +63,12 @@ jobs:
         uses: machine-learning-apps/pr-comment@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'pull_request'
         with:
           path: docs-coverage.txt
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

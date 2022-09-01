@@ -29,30 +29,10 @@ RETRYABLE_ERRORS = (httplib2.HttpLib2Error, IOError)
 NUM_RETRIES = 5
 
 # Number of bytes to send/receive in each request.
-CHUNKSIZE = 2 * MEGABYTE
+CHUNKSIZE = 10 * MEGABYTE
 
 # Mimetype to use if one can't be guessed from the file extension.
 DEFAULT_MIMETYPE = "application/octet-stream"
-
-
-def handle_progressless_iter(error, progressless_iters):
-    if progressless_iters > NUM_RETRIES:
-        print("Failed to make progress for too many consecutive iterations.")
-        raise error
-
-    sleeptime = random.random() * (2**progressless_iters)
-    print(
-        (
-            "Caught exception (%s). Sleeping for %s seconds before retry #%d."
-            % (str(error), sleeptime, progressless_iters)
-        )
-    )
-    time.sleep(sleeptime)
-
-
-def print_with_carriage_return(s):
-    sys.stdout.write("\r" + s)
-    sys.stdout.flush()
 
 
 def upload_to_gcs(bucket, object_name, filename):
@@ -64,74 +44,35 @@ def upload_to_gcs(bucket, object_name, filename):
         object_name=object_name,
         filename=filename,
         num_max_attempts=5,
+        mime_type=DEFAULT_MIMETYPE,
+        chunk_size=CHUNKSIZE,
     )
 
     print("\nUpload complete!")
     print(json_dumps(response, indent=2))
 
 
-def upload_small_file_to_gcs(bucket, object_name, filename):
-    print(bucket)
-    print(object_name)
-    print(filename)
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(str(bucket))
-    blob = bucket.blob(str(object_name))
-
-    os.stat(str(filename))
-    blob.upload_from_filename(str(filename))
-    print(len(blob.download_as_string().decode()))
-
-    print("File {} uploaded to {}.".format(filename, object_name))
-
-
-def upload_empty_file_to_gcs(bucket, object_name, filename):
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(str(bucket))
-    blob = bucket.blob(str(object_name))
-
-    blob.upload_from_filename(str(filename))
-
-    print("File {} uploaded to {}.".format(filename, object_name))
-
-
 def download_from_gcs(bucket, object, filename):
-    ro_scope = "https://www.googleapis.com/auth/storage.full_control"
-    credentials, _ = google.auth.default(scopes=(ro_scope,))
-    transport = tr_requests.AuthorizedSession(credentials)
+    """
+    This function was refactored in commit
+    https://github.com/merklescience/dataengineering/pull/29/commits/6e5445274e3ad9baac1d579e66254fbc05e71e3b
 
-    object = object.replace("/", "%2F")
-    filename = open(filename, "wb")
+    If you run into issues with this function while downloading large files,
+    we need a more closer look at this function
+    """
+    cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
-    chunk_size = 10 * 1024 * 1024
-    url_template = (
-        "https://www.googleapis.com/download/storage/v1/b/"
-        "{bucket}/o/{object}?alt=media"
+    print("Building upload request...")
+    response = cloud_storage_hook.download(
+        bucket_name=bucket,
+        object_name=object,
+        filename=filename,
+        num_max_attempts=5,
+        chunk_size=CHUNKSIZE,
     )
-    media_url = url_template.format(bucket=bucket, object=object)
-    logging.info("Downloading file: " + str(media_url))
-    download = RawChunkedDownload(media_url, chunk_size, filename)
-    response = download.consume_next_chunk(transport)
-    logging.info("Response: " + str(response))
-    while not download.finished:
-        logging.info(
-            "Bytes downloaded : "
-            + str(download.bytes_downloaded)
-            + " total of "
-            + str(download.total_bytes)
-        )
-        response = download.consume_next_chunk(transport)
-        logging.info("Response: " + str(response))
-    logging.info(
-        "Bytes downloaded : "
-        + str(download.bytes_downloaded)
-        + " total of "
-        + str(download.total_bytes)
-    )
-    logging.info("Response: " + str(response))
 
-    if not download.bytes_downloaded == download.total_bytes:
-        raise ValueError("File downloaded not of same size")
+    print("\nDownload complete!")
+    print(json_dumps(response, indent=2))
 
 
 def build_gcs_bucket(bucket_id):

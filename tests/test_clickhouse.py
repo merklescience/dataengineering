@@ -7,12 +7,12 @@ import requests
 
 from dataengineering import logger
 from dataengineering.clickhouse import ClickhouseConnector
-from dataengineering.clickhouse.connector import tempfile
 
 
 @pytest.fixture(scope="module")
 def connector():
-    """This fixture returns a ClickhouseConnector attached to a temporary clickhouse server launched via docker."""
+    """This fixture returns a ClickhouseConnector attached to a
+    temporary clickhouse server launched via docker."""
     from .clickhouse_container import HttpClickHouseContainer
 
     with HttpClickHouseContainer("clickhouse/clickhouse-server:21.8") as clickhouse:
@@ -107,3 +107,28 @@ def test_clickhouse_write_to_database(connector):
         )
     # None of these should raise an error.
     # don't need to assert anything.
+
+
+def test_clickhouse_chain_state():
+    """Tests that the chain state is retrievable"""
+    import datetime
+    import os
+
+    from dataengineering.chains import Chain
+    from dataengineering.clickhouse.utils import get_chain_state
+
+    chain_state = get_chain_state(
+        Chain.Hedera,
+        datetime.datetime(2022, 5, 10),
+        os.environ["CLICKHOUSE_URL"],
+        os.environ["CLICKHOUSE_USER"],
+        os.environ["CLICKHOUSE_PASSWORD"],
+        database=os.environ.get("CLICKHOUSE_AUTH_DB"),
+        port=os.environ.get("CLICKHOUSE_HTTP_PORT", 8123),
+    )
+    logger.debug(chain_state)
+    assert isinstance(chain_state, dict), "Error getting the chain state"
+    assert "data" in chain_state
+    logger.debug(chain_state["data"])
+    assert len(chain_state["data"]) > 0
+    assert "block" in chain_state["data"][0]
