@@ -1,7 +1,10 @@
 import warnings
-
+import boto3
+import os
 import pandas as pd
 import requests
+import shutil
+from google.cloud import storage
 
 from dataengineering import logger
 from dataengineering.tigergraph import exceptions
@@ -10,21 +13,28 @@ from dataengineering.tigergraph import exceptions
 GSQL_TIMEOUT = f"{20 * 60 * 1000}"
 
 
+def _form_tigergraph_request(tigergraph_ip, chain, loading_job) -> str:
+    return (
+        f"http://{tigergraph_ip}:9000/ddl/{chain}?&"
+        f"tag={loading_job}&filename=f1&sep=,&eol=\n"
+    )
+
+
 def tg_get_request(connection_string):
     """
         Make Tigergraph HTTP GET request
     :param connection_string:
     """
-    logging.info(connection_string)
+    logger.info(connection_string)
     response = requests.get(
         connection_string,
         headers={"GSQL-TIMEOUT": GSQL_TIMEOUT, "GSQL-THREAD-LIMIT": GSQL_THREAD_LIMIT},
     )
 
-    logging.info(response.content)
-    logging.info(response)
+    logger.info(response.content)
+    logger.info(response)
     if response.status_code == 200:
-        logging.info("Successful")
+        logger.info("Successful")
     else:
         raise AirflowException("Error in processing")
     return response
@@ -87,6 +97,22 @@ def tg_post_request(tg_request, data, statistic):
         raise exceptions.InvalidAttributeInTigergraphRequest()
 
 
+def _post_local_file_to_tg(
+    filename, tigergraph_ip, chain, loading_job, stats, size_hint=2 << 22
+):
+    file_handler = open(filename, "r")
+    data = file_handler.readlines(size_hint)
+    while len(data) > 0:
+        tg_post_request(
+            tigergraph_request=_form_tigergraph_request(
+                tigergraph_ip=tigergraph_ip, chain=chain, loading_job=loading_job
+            ),
+            data="".join(data),
+            statistic=stats,
+        )
+        data = file_handler.readlines(size_hint)
+
+
 def transactions_agg(x):
     """
     Aggregation logic for daily_transactions loading job on tigergraph.
@@ -126,3 +152,67 @@ def link_outputs_agg(x):
         "value_usd": x["coin_value_usd"].sum(),
     }
     return pd.Series(aggregate)
+
+
+def run_s3_loading_job_tigergraph(**kwargs):
+    """
+    Run file loading of S3 files to Tigergraph via HTTP POST
+    :param kwargs:
+    """
+    s3_client = boto3.client(
+        "s3",
+        region_name="us-east-2",
+        aws_access_key_id=kwargs["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=kwargs["AWS_SECRET_ACCESS_KEY"],
+    )
+
+    s3_client.download_file(
+        Filename=kwargs["FILENAME"], Bucket=kwargs["AWS_BUCKET"], Key=kwargs["AWS_KEY"]
+    )
+
+    _post_local_file_to_tg(
+        filename=kwargs["FILENAME"],
+        tigergraph_ip=kwargs["TIGERGRAPH_HOST"],
+        chain=kwargs["CHAIN"],
+        loading_job=kwargs["JOB"],
+        stats=kwargs["STATS"],
+    )
+
+
+def run_multifile_gcs_loading_job_tigergraph(**kwargs):
+    """
+    Run multi file loading of GCS files to Tigergraph via HTTP POST
+    :param kwargs:
+    """
+    client = storage.Client()
+    logger.info(kwargs)
+    local_folder = f"{kwargs['CHAIN']}_{kwargs['RESOURCE']}_{kwargs['ds']}"
+    prefix = f"{kwargs['CHAIN']}{kwargs['DEPLOY_LABEL']}/{kwargs['RESOURCE']}/{kwargs['ds']}/"
+
+    if os.path.exists(local_folder):
+        shutil.rmtree(local_folder)
+    os.makedirs(local_folder)
+
+    print(prefix)
+    print(local_folder)
+
+    blobs = list(client.list_blobs(kwargs["GCS_BUCKET"], prefix=prefix))
+
+    if len(blobs) == 0:
+        raise AirflowException("No files generated")
+
+    for blob in blobs:
+        print(blob)
+        filename = blob.name.split("/")[blob.name.count("/")]
+        local_full_filepath = os.path.join(local_folder, filename)
+        blob.download_to_filename(local_full_filepath)
+
+        _post_local_file_to_tg(
+            filename=local_full_filepath,
+            tigergraph_ip=kwargs["TIGERGRAPH_HOST"],
+            chain=kwargs["CHAIN"],
+            loading_job=kwargs["JOB"],
+            stats=kwargs["STATS"],
+        )
+
+        os.remove(local_full_filepath)
