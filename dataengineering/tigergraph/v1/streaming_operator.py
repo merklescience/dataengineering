@@ -6,10 +6,11 @@ import jinja2
 import numpy as np
 import pandas as pd
 from airflow.models import BaseOperator
-from blockchain.bitquery.common_utils import get_synced_status
+from dataengineering.airflow.bitquery import get_synced_status
 from coinprice.utils import get_latest_token_prices, get_tokens_metadata
-from resources.clickhouse.ch_bash_hook import ClickHouseBashHook
-from resources.tg.utils import form_tg_loading_request, tg_post_request
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
+from dataengineering.tigergraph.v1.utils import form_tg_loading_request, tg_post_request
+
 
 
 class TGBTStreamingOperator(BaseOperator):
