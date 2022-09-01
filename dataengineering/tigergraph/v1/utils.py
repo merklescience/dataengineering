@@ -10,6 +10,26 @@ from dataengineering.tigergraph import exceptions
 GSQL_TIMEOUT = f"{20 * 60 * 1000}"
 
 
+def tg_get_request(connection_string):
+    """
+        Make Tigergraph HTTP GET request
+    :param connection_string:
+    """
+    logging.info(connection_string)
+    response = requests.get(
+        connection_string,
+        headers={"GSQL-TIMEOUT": GSQL_TIMEOUT, "GSQL-THREAD-LIMIT": GSQL_THREAD_LIMIT},
+    )
+
+    logging.info(response.content)
+    logging.info(response)
+    if response.status_code == 200:
+        logging.info("Successful")
+    else:
+        raise AirflowException("Error in processing")
+    return response
+
+
 def form_tg_loading_request(tg_ip, chain, loading_job) -> str:
     """Creates the tigergraph loading request URL"""
     warnings.warn(
