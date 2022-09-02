@@ -1,9 +1,10 @@
-import warnings
-import boto3
 import os
+import shutil
+import warnings
+
+import boto3
 import pandas as pd
 import requests
-import shutil
 from google.cloud import storage
 
 from dataengineering import logger
@@ -68,7 +69,9 @@ def tg_post_request(tg_request, data, statistic):
     try:
         response_json = response.json()
     except requests.JSONDecodeError as e:
-        logger.error("Response from tigergraph={}".format(response.content))
+        logger.error(
+            "Error parsing response from tigergraph=`{}`".format(response.content)
+        )
         raise exceptions.InvalidPayloadInTigergraphResponse() from e
 
     try:
@@ -80,20 +83,32 @@ def tg_post_request(tg_request, data, statistic):
     required_statistic = stats[statistic]
 
     if stats["validLine"] == 0:
+        logger.error("NoValidLinesinTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.NoValidLinesinTigergraphRequest()
     elif stats["rejectLine"] > 0:
+        logger.error("RejectedLinesinTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.RejectedLinesinTigergraphRequest()
     elif stats["failedConditionLine"] > 0:
+        logger.error("FailedConditionLineInTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.FailedConditionLineInTigergraphRequest()
     elif stats["invalidJson"] > 0:
+        logger.error("InvalidJsonInTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.InvalidJsonInTigergraphRequest()
     elif stats["oversizeToken"] > 0:
+        logger.error("OversizeTokeninTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.OversizeTokeninTigergraphRequest()
     elif stats["notEnoughToken"] > 0:
+        logger.error("NotEnoughTokenInTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.NotEnoughTokenInTigergraphRequest()
     elif (required_statistic[0]["validObject"] - stats["validLine"]) > 1:
+        logger.error(
+            "NotEnoughValidLinesInValidObjectInTigergraphRequest. stats=`{}`".format(
+                stats
+            )
+        )
         raise exceptions.NotEnoughValidLinesInValidObjectInTigergraphRequest()
     elif required_statistic[0]["invalidAttribute"] > 1:
+        logger.error("InvalidAttributeInTigergraphRequest. stats=`{}`".format(stats))
         raise exceptions.InvalidAttributeInTigergraphRequest()
 
 
