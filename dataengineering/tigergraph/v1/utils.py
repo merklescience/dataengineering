@@ -26,18 +26,15 @@ def tg_get_request(connection_string):
         Make Tigergraph HTTP GET request
     :param connection_string:
     """
-    logger.info(connection_string)
+    logger.debug(connection_string)
     response = requests.get(
         connection_string,
         headers={"GSQL-TIMEOUT": GSQL_TIMEOUT, "GSQL-THREAD-LIMIT": GSQL_THREAD_LIMIT},
     )
 
-    logger.info(response.content)
-    logger.info(response)
-    if response.status_code == 200:
-        logger.info("Successful")
-    else:
-        raise AirflowException("Error in processing")
+    logger.debug(response.content)
+    logger.debug(response)
+    response.raise_for_status()
     return response
 
 
