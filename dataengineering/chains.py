@@ -41,3 +41,24 @@ class Chain(Enum):
     def databasename(self):
         """Returns the clickhouse database name"""
         return self.get_internal_name()
+
+    @staticmethod
+    def get_smart_contract_chains():
+        """Returns a list of smart contract chains"""
+        return [chain for chain in Chain if chain.supports_smart_contracts]
+
+    @staticmethod
+    def get_non_smart_contract_chains():
+        return [chain for chain in Chain if not chain.supports_smart_contracts]
+
+    @property
+    def supports_smart_contracts(self) -> bool:
+        return self in [
+            Chain.Ethereum,
+            Chain.BinanceSmartChain,
+            Chain.Matic,
+            Chain.Tron,
+            Chain.Zilliqa,
+            Chain.Cardano,
+            Chain.Stellar,
+        ]
