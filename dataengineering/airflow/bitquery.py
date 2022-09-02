@@ -1,13 +1,12 @@
+import datetime as dt
 import json
 import logging
-import datetime as dt
 
 import jinja2
 import requests
-from airflow.models import Variable
+from google.cloud import bigquery
 
 from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
-from google.cloud import bigquery
 
 
 def make_ch_request(query: str, ch_conn_id: str, exception_msg: str) -> dict:
@@ -191,6 +190,8 @@ def get_synced_status(
     :return: dictionary with the keys last_synced_block,last_synced_block_date,latest_block,latest_block_date
     :rtype: dict
     """
+    from airflow.models import Variable
+
     var_name = get_variable_name(chain=chain, database=database, var_prefix=var_prefix)
     sync_status = Variable.get(var_name, deserialize_json=True)
     if sync_status is None:
@@ -235,6 +236,8 @@ def check_sync_status(
     :return: true or false for short circuit operator to proceed
     :rtype: bool
     """
+    from airflow.models import Variable
+
     sync_status = get_synced_status(
         chain=chain, database=database, var_prefix=var_prefix
     )
@@ -304,6 +307,8 @@ def set_latest_block(
     :return: None
     :rtype: None
     """
+    from airflow.models import Variable
+
     assert not (
         (database == "tigergraph") and (tg_ip is None)
     ), f"tg ip can't be none when database is {database}"
