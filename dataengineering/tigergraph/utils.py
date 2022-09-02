@@ -85,9 +85,7 @@ def write_chainstate_to_tigergraph(
     )
 
 
-def get_chain_state(
-    chain: chains.Chain, tigergraph_url="http://tigergraph.merklescience.com"
-):
+def get_chain_state(chain: chains.Chain, tigergraph_url: str):
     """Given a chain, it gets the chain state from tigergraph"""
     url = f"{tigergraph_url}/query/{chain.graphname}/get_chainstate"
     response = requests.get(url)
