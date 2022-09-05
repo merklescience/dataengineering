@@ -1,16 +1,11 @@
 import ast
-import os
 import logging
+import os
 import subprocess
-import jinja2
-
-from airflow.models import Variable
-from airflow.operators.bash_operator import BashOperator
 from datetime import timedelta
 
-CLICKHOUSE_URI = Variable.get("clickhouse_uri", "")
-CH_USER = Variable.get("CH_USER", "")
-CH_PASSWORD = Variable.get("CH_PASSWORD", "")
+import jinja2
+from airflow.models import Variable
 
 SETUP_COMMAND = (
     "set -o xtrace && " + "export LC_ALL=C.UTF-8 && "
@@ -27,8 +22,10 @@ def read_file(file_path):
 def _build_clickhouse_http_command(
     parent_dir, resource, filename="-", clickhouse_uri=""
 ):
+    from airflow.models import Variable
+
     if clickhouse_uri == "":
-        clickhouse_uri = Variable.get("clickhouse_uri", "")
+        clickhouse_uri = Variable.get("CLICKHOUSE_URI", "")
 
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
@@ -42,6 +39,8 @@ def _build_clickhouse_http_command(
 def _build_setup_table_operator(
     dag, env, table_type, resource, sql_folder, task_id="", params={}, clickhouse_uri=""
 ):
+    from airflow.operators.bash_operator import BashOperator
+
     if task_id == "":
         task_id = f"setup_{resource}_table"
 
@@ -74,6 +73,8 @@ def _build_setup_table_operator(
 def _build_setup_streaming_table_operator(
     dag, env, table_type, resource, sql_folder, clickhouse_uri, task_id="", params={}
 ):
+    from airflow.operators.bash_operator import BashOperator
+
     if task_id == "":
         task_id = f"setup_{resource}_table_{clickhouse_uri}"
 
@@ -97,6 +98,8 @@ def _build_setup_streaming_table_operator(
 def flush_clickhouse_streaming_tables(
     dag, env, resource, sql_folder, task_id, params={}, clickhouse_uri=""
 ):
+    from airflow.operators.bash_operator import BashOperator
+
     command = _build_clickhouse_http_command(
         parent_dir=os.path.join(sql_folder, "schemas/flush"),
         resource=resource,
@@ -117,6 +120,8 @@ def flush_clickhouse_streaming_tables(
 def _build_table_operator(
     dag, env, query, sql_folder, task_id="", params={}, clickhouse_uri=""
 ):
+    from airflow.operators.bash_operator import BashOperator
+
     operator = BashOperator(
         task_id=task_id,
         bash_command=_build_clickhouse_http_command(
@@ -140,6 +145,8 @@ def _build_enrich_command(resource, chain):
 
 
 def add_clickhouse_operator(dag, env, task_id, bash_command, dependencies=None):
+    from airflow.operators.bash_operator import BashOperator
+
     operator = BashOperator(
         task_id=task_id,
         bash_command=bash_command,
@@ -170,13 +177,15 @@ def _YYYY_MM(start_year):
 
 def _build_clickhouse_optimize_http_command(resource, start_year):
     CLICKHOUSE_URIS = ast.literal_eval(Variable.get("CLICKHOUSE_URIS", ""))
+    CLICKHOUSE_USER = Variable.get("CLICKHOUSE_USER", "")
+    CLICKHOUSE_PASSWORD = Variable.get("CLICKHOUSE_PASSWORD", "")
 
     command_list = []
     for partition in _YYYY_MM(start_year):
         for each_clickhouse_instance_uri, shard_db in CLICKHOUSE_URIS:
             command_list.append(
                 f"eval ' echo 'OPTIMIZE TABLE {shard_db}.{resource} PARTITION {partition} FINAL DEDUPLICATE' "
-                f"| curl http://{CH_USER}:{CH_PASSWORD}@{each_clickhouse_instance_uri}:8123?query= --data-binary @- '"
+                f"| curl http://{CLICKHOUSE_USER}:{CLICKHOUSE_PASSWORD}@{each_clickhouse_instance_uri}:8123?query= --data-binary @- '"
             )
 
     command = " && ".join(command_list)
@@ -184,17 +193,20 @@ def _build_clickhouse_optimize_http_command(resource, start_year):
 
 
 def _build_clickhouse_optimize_deduplicate_http_command(resource):
-    clickhouse_uri = Variable.get("clickhouse_uri", "")
+    CLICKHOUSE_URI = Variable.get("CLICKHOUSE_URI", "")
     return (
         f"eval ' echo 'OPTIMIZE TABLE {resource} FINAL DEDUPLICATE' "
-        f"| curl {clickhouse_uri}:8123?query= --data-binary @- '"
+        f"| curl {CLICKHOUSE_URI}:8123?query= --data-binary @- '"
     )
 
 
 def _build_load_clustering_updates_command(query_path):
+    from airflow.models import Variable
+
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query = read_file(os.path.join(dags_folder, query_path))
     CREATE_DIR = f"mkdir $EXECUTION_DATE"
+    CLICKHOUSE_URI = Variable.get("CLICKHOUSE_URI", "")
 
     CP_COMMAND = (
         f"gsutil cp -Z -r gs://$GCS_BUCKET/$CHAIN/$EXECUTION_DATE/* $EXECUTION_DATE/"
@@ -223,13 +235,13 @@ def _build_export_clickhouse_http_command(
     filename,
     environment,
 ):
-    clickhouse_uri = Variable.get("clickhouse_uri", "")
+    CLICKHOUSE_URI = Variable.get("CLICKHOUSE_URI", "")
 
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
     query = format_sql_query(read_file(query_path), environment=environment)
 
-    return f'echo "{query}" | curl -sS "{clickhouse_uri}" --data-binary @- > {filename} 2>&1 && if cat {filename} | grep -E "Failed|Exception|Missing"; then exit -1; fi'
+    return f'echo "{query}" | curl -sS "{CLICKHOUSE_URI}" --data-binary @- > {filename} 2>&1 && if cat {filename} | grep -E "Failed|Exception|Missing"; then exit -1; fi'
 
 
 def read_and_render_file(file_path, sql_variables: dict = None):
@@ -314,18 +326,3 @@ def _check_file_for_clickhouse_error(filename):
 
     check_func("head")
     check_func("tail")
-
-
-def _build_export_clickhouse_http_command_v21(
-    parent_dir,
-    resource,
-    filename,
-    environment,
-):
-    clickhouse_uri = Variable.get("CLICKHOUSE_URI_V21", "")
-
-    dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
-    query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
-    query = format_sql_query(read_file(query_path), environment=environment)
-
-    return f'echo "{query}" | curl -sS "{clickhouse_uri}" --data-binary @- > {filename} 2>&1 && if cat {filename} | grep -E "Failed|Exception|Missing"; then exit -1; fi'

@@ -3,12 +3,13 @@ from typing import Optional
 
 from dataengineering import logger
 from dataengineering.chains import Chain
-from dataengineering.clickhouse import ClickhouseConnector
 
 
 def get_chain_state(
     chain: Chain, query_date: Optional[datetime.datetime] = None, *args, **kwargs
 ):
+    from dataengineering.clickhouse import ClickhouseConnector
+
     """Returns the chain state of a cryptocurrency"""
     if query_date is None:
         query_date = datetime.datetime.now()

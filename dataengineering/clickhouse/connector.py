@@ -8,6 +8,7 @@ import requests
 
 from dataengineering import logger
 from dataengineering.clickhouse import exceptions
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 
 R = TypeVar("R")
 """Define a generic return type that will be returned from the `ClickhouseConnector.run` method."""
@@ -107,8 +108,6 @@ class ClickhouseConnector:
     ):
         """Writes to a table"""
         from urllib.request import pathname2url
-
-        from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
 
         data_format_dict = {
             "parquet": "Parquet",

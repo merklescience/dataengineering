@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 
-from airflow.models import DAG, Variable
 from decouple import config
 
 from dataengineering.airflow.bigquery.utils import ServerEnv
@@ -64,6 +63,7 @@ class DAGFactory:
             default_args: (dict)
                 Other default DAG arguments which are not listed above can passed here
         """
+        from airflow.models import DAG
 
         DEFAULT_ARGS = {
             "owner": owner,

@@ -1,7 +1,6 @@
 import os
 
 import jinja2
-from airflow.models import Variable
 from decouple import config
 
 from dataengineering.constants import ServerEnv
@@ -14,6 +13,8 @@ def build_bigquery_destination(dataset_id, table_id):
     The intented use of this function is to route table creation
     statements to different datasets based on environment
     """
+    from airflow.models import Variable
+
     project_id = Variable.get("BIGQUERY_DESTINATION_PROJECT")
 
     server_env = config("SERVER_ENV", ServerEnv.LOCAL, cast=str)
@@ -75,15 +76,16 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
         return apply_env_variables_on_blob(template_queries, environment)
     return template_queries
 
-def format_sql_query(sql, environment):
-     """
-     to render templated  BQ query
-     :param sql: templated query
-     :param environment: variables to fill in
-     :return: runable query
-     """
 
-     for key, value in environment.items():
-         if isinstance(key, str) and isinstance(value, str):
-             sql = sql.replace(f"[[ {key} ]]", value)
-     return sql
+def format_sql_query(sql, environment):
+    """
+    to render templated  BQ query
+    :param sql: templated query
+    :param environment: variables to fill in
+    :return: runable query
+    """
+
+    for key, value in environment.items():
+        if isinstance(key, str) and isinstance(value, str):
+            sql = sql.replace(f"[[ {key} ]]", value)
+    return sql
