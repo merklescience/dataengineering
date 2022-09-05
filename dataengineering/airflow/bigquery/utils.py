@@ -77,7 +77,6 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
         return apply_env_variables_on_blob(template_queries, environment)
     return template_queries
 
-
 def run_bigquery_sqls(
     sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
 ) -> None:
@@ -104,3 +103,4 @@ def run_bigquery_sqls(
         logging.info("Running BQ query " + each_query)
         query_job = client.query(each_query, job_id_prefix=job_id_prefix)
         results = query_job.result()
+
