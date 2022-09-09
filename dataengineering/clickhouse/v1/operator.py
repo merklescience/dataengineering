@@ -616,10 +616,17 @@ class ClickhouseExecuteWithURIOperator(BaseOperator):
         self.uri = uri
 
     def execute(self, context: Dict[str, Any] = None):
-        conn_details = {"host": self.uri, "user": self.user, "password": self.password, "database": "default"}
+        conn_details = {
+            "host": self.uri,
+            "user": self.user,
+            "password": self.password,
+            "database": "default",
+        }
         individual_queries = self.sql.split(";")
         for each_query in individual_queries:
             if each_query == "":
                 continue
             logging.info("Executing SQL " + each_query)
-            logging.info(f"Response from query - {execute_sql(each_query, conn_details,auth_type='url')}")
+            logging.info(
+                f"Response from query - {execute_sql(each_query, conn_details,auth_type='url')}"
+            )

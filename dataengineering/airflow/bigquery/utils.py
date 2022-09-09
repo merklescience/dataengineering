@@ -103,4 +103,3 @@ def run_bigquery_sqls(
         logging.info("Running BQ query " + each_query)
         query_job = client.query(each_query, job_id_prefix=job_id_prefix)
         results = query_job.result()
-
