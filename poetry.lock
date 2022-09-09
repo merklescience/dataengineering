@@ -284,6 +284,24 @@ google-auth = ">=1.25.0,<3.0dev"
 grpc = ["grpcio (>=1.38.0,<2.0dev)"]
 
 [[package]]
+name = "google-cloud-storage"
+version = "2.5.0"
+description = "Google Cloud Storage API client library"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+google-api-core = ">=1.31.5,<2.0.0 || >2.3.0,<3.0.0dev"
+google-auth = ">=1.25.0,<3.0dev"
+google-cloud-core = ">=2.3.0,<3.0dev"
+google-resumable-media = ">=2.3.2"
+requests = ">=2.18.0,<3.0.0dev"
+
+[package.extras]
+protobuf = ["protobuf (<5.0.0dev)"]
+
+[[package]]
 name = "google-crc32c"
 version = "1.3.0"
 description = "A python wrapper of the C library 'Google CRC32C'"
@@ -296,7 +314,7 @@ testing = ["pytest"]
 
 [[package]]
 name = "google-resumable-media"
-version = "2.2.0"
+version = "2.3.3"
 description = "Utilities for Google Media Downloads and Resumable Uploads"
 category = "main"
 optional = false
@@ -306,8 +324,8 @@ python-versions = ">= 3.6"
 google-crc32c = ">=1.0,<2.0dev"
 
 [package.extras]
-requests = ["requests (>=2.18.0,<3.0.0dev)"]
 aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)"]
+requests = ["requests (>=2.18.0,<3.0.0dev)"]
 
 [[package]]
 name = "googleapis-common-protos"
@@ -1031,7 +1049,7 @@ docs = ["rst.linker (>=1.9)", "jaraco.packaging (>=8.2)", "sphinx"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "1f9f73af8924cdc0911295b78320b8289dce11836cbde3b6bbcc1ec50d88887e"
+content-hash = "98d2a29f24bb5ad7147b1e57a36b25a65c39929b7a0f7f10e3eeb3540aefece6"
 
 [metadata.files]
 appnope = [
@@ -1253,6 +1271,10 @@ google-cloud-core = [
     {file = "google-cloud-core-2.3.2.tar.gz", hash = "sha256:b9529ee7047fd8d4bf4a2182de619154240df17fbe60ead399078c1ae152af9a"},
     {file = "google_cloud_core-2.3.2-py2.py3-none-any.whl", hash = "sha256:8417acf6466be2fa85123441696c4badda48db314c607cf1e5d543fa8bdc22fe"},
 ]
+google-cloud-storage = [
+    {file = "google-cloud-storage-2.5.0.tar.gz", hash = "sha256:382f34b91de2212e3c2e7b40ec079d27ee2e3dbbae99b75b1bcd8c63063ce235"},
+    {file = "google_cloud_storage-2.5.0-py2.py3-none-any.whl", hash = "sha256:19a26c66c317ce542cea0830b7e787e8dac2588b6bfa4d3fd3b871ba16305ab0"},
+]
 google-crc32c = [
     {file = "google-crc32c-1.3.0.tar.gz", hash = "sha256:276de6273eb074a35bc598f8efbc00c7869c5cf2e29c90748fccc8c898c244df"},
     {file = "google_crc32c-1.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:cb6994fff247987c66a8a4e550ef374671c2b82e3c0d2115e689d21e511a652d"},
@@ -1299,8 +1321,8 @@ google-crc32c = [
     {file = "google_crc32c-1.3.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:7f6fe42536d9dcd3e2ffb9d3053f5d05221ae3bbcefbe472bdf2c71c793e3183"},
 ]
 google-resumable-media = [
-    {file = "google-resumable-media-2.2.0.tar.gz", hash = "sha256:9f30ce7fcd13b8ef159b2cb9583d4a9bb99e7f7b85816b112059b032f2f084a0"},
-    {file = "google_resumable_media-2.2.0-py2.py3-none-any.whl", hash = "sha256:9142a7600eba233645eedad863f78173123f374e50e1bc0eaf4f358ce08aa757"},
+    {file = "google-resumable-media-2.3.3.tar.gz", hash = "sha256:27c52620bd364d1c8116eaac4ea2afcbfb81ae9139fb3199652fcac1724bfb6c"},
+    {file = "google_resumable_media-2.3.3-py2.py3-none-any.whl", hash = "sha256:5b52774ea7a829a8cdaa8bd2d4c3d4bc660c91b30857ab2668d0eb830f4ea8c5"},
 ]
 googleapis-common-protos = [
     {file = "googleapis-common-protos-1.56.4.tar.gz", hash = "sha256:c25873c47279387cfdcbdafa36149887901d36202cb645a0e4f29686bf6e4417"},
