@@ -42,7 +42,7 @@ def upload_to_gcs(bucket, object_name, filename):
     from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 
     cloud_storage_hook = GoogleCloudStorageHook(
-        google_cloud_storage_conn_id="google_cloud_default"
+        gcp_conn_id="google_cloud_default"
     )
     logging.info(
         "Uploading "
@@ -202,7 +202,7 @@ class ClickhouseGCStoCHOperator(BaseOperator):
         if os.path.isfile(self.local_filename):
             os.remove(self.local_filename)
         GoogleCloudStorageHook(
-            google_cloud_storage_conn_id="google_cloud_default"
+            gcp_conn_id="google_cloud_default"
         ).download(
             bucket=self.gcs_bucket,
             object=self.gcs_path + self.gcs_filename,
@@ -327,7 +327,7 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
     def execute(self, context: Dict[str, Any] = None) -> None:
         ch_hook = ClickHouseBashHook(clickhouse_conn_id=self.clickhouse_conn_id)
         gcs_hook = GoogleCloudStorageHook(
-            google_cloud_storage_conn_id="google_cloud_default"
+            gcp_conn_id="google_cloud_default"
         )
         dag_id = context.get("task_instance").dag_id
         task_id = context.get("task_instance").task_id

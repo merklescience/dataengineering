@@ -394,31 +394,3 @@ def validate_bt_bq_counts(
     logging.info(f"BQ count:{bq_count}")
     if int(data["total_count"]) != int(bq_count):
         raise Exception("BQ and BT CH count check failed")
-
-
-def run_bq_sqls(
-    sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
-) -> None:
-    """
-    This function is for running bigquery queries which don't return results like DDLs,DMLs,data exports
-    :param sql: query, can also pass multiple queries separated via ';'
-    :type sql: str
-    :param project_id: GCP project id
-    :type project_id: str
-    :param job_id_prefix: job prefix, this is helpful in identifying specific bq jobs
-    :type job_id_prefix: str
-    :param args:
-    :type args:
-    :param kwargs:
-    :type kwargs:
-    :return:
-    :rtype:
-    """
-    individual_queries = sql.split(";")
-    client = bigquery.Client(project=project_id)
-    for each_query in individual_queries:
-        if each_query == "":
-            continue
-        logging.info("Running BQ query " + each_query)
-        query_job = client.query(each_query, job_id_prefix=job_id_prefix)
-        results = query_job.result()

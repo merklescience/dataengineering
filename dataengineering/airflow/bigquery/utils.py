@@ -1,7 +1,9 @@
+import logging
 import os
 
 import jinja2
 from decouple import config
+from google.cloud import bigquery
 
 from dataengineering.constants import ServerEnv
 
@@ -80,15 +82,29 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
     return template_queries
 
 
-def format_sql_query(sql, environment):
+def run_bigquery_sqls(
+    sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
+) -> None:
     """
-    to render templated  BQ query
-    :param sql: templated query
-    :param environment: variables to fill in
-    :return: runable query
+    This function is for running bigquery queries which don't return results like DDLs,DMLs,data exports
+    :param sql: query, can also pass multiple queries separated via ';'
+    :type sql: str
+    :param project_id: GCP project id
+    :type project_id: str
+    :param job_id_prefix: job prefix, this is helpful in identifying specific bq jobs
+    :type job_id_prefix: str
+    :param args:
+    :type args:
+    :param kwargs:
+    :type kwargs:
+    :return:
+    :rtype:
     """
-
-    for key, value in environment.items():
-        if isinstance(key, str) and isinstance(value, str):
-            sql = sql.replace(f"[[ {key} ]]", value)
-    return sql
+    individual_queries = sql.split(";")
+    client = bigquery.Client(project=project_id)
+    for each_query in individual_queries:
+        if each_query == "":
+            continue
+        logging.info("Running BQ query " + each_query)
+        query_job = client.query(each_query, job_id_prefix=job_id_prefix)
+        results = query_job.result()
