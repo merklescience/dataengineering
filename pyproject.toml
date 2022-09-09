@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dataengineering"
-version = "0.2.0"
+version = "0.2.2"
 description = "Utilities Python module for Data Engineering at Merkle Science"
 authors = ["Data Engineering <dataengineering@merklescience.com>"]
 
