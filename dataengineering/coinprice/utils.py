@@ -7,10 +7,7 @@ from googleapiclient import discovery
 from googleapiclient.errors import HttpError
 
 from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
-from dataengineering.coinprice.constants import (
-    PRICING_SERVICE_TOKEN,
-    PRICING_SERVICE_URL,
-)
+from dataengineering.constants import CoinPriceEnv
 
 
 def oid_to_str(df):
@@ -21,8 +18,8 @@ def oid_to_str(df):
 
 
 def get_latest_token_prices(symbols: list) -> pd.DataFrame:
-    url = PRICING_SERVICE_URL + "/api/coins/prices"
-    headers = {"X-Api-Key": PRICING_SERVICE_TOKEN}
+    url = CoinPriceEnv.PRICING_SERVICE_URL + "/api/coins/prices"
+    headers = {"X-Api-Key": CoinPriceEnv.PRICING_SERVICE_TOKEN}
     params = {"coin_symbols": ",".join(symbols)}
     response = requests.get(url, headers=headers, params=params)
     if response.status_code != 200:
