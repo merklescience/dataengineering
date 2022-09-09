@@ -1,17 +1,19 @@
+import json
 import logging
 import os
-from typing import Optional, Dict, Any
-from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
-from airflow.models import BaseOperator, Variable
+from typing import Any, Dict, Optional
 
-from dataengineering.airflow.bitquery import get_synced_status
-from dataengineering.coinprice.utils import get_latest_token_prices
-from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
-from dataengineering.clickhouse.v1.requests import execute_sql
 import jinja2
 import pandas as pd
 import requests
-import json
+
+# FIXME: importing BaseOperator is unavoidable since the class is defined on the global scope, as it should be.
+from airflow.models import BaseOperator
+
+from dataengineering.airflow.bitquery import get_synced_status
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
+from dataengineering.clickhouse.v1.requests import execute_sql
+from dataengineering.coinprice.utils import get_latest_token_prices
 
 
 def convert_bytes(num):
@@ -37,6 +39,8 @@ def get_file_size(file_path):
 
 
 def upload_to_gcs(bucket, object_name, filename):
+    from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
     cloud_storage_hook = GoogleCloudStorageHook(
         gcp_conn_id="google_cloud_default"
     )
@@ -193,6 +197,8 @@ class ClickhouseGCStoCHOperator(BaseOperator):
         self.file_format = file_format
 
     def execute(self, context: Dict[str, Any] = None) -> None:
+        from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
         if os.path.isfile(self.local_filename):
             os.remove(self.local_filename)
         GoogleCloudStorageHook(

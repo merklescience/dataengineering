@@ -2,7 +2,6 @@ import logging
 import os
 
 import jinja2
-from airflow.models import Variable
 from decouple import config
 from google.cloud import bigquery
 
@@ -16,6 +15,11 @@ def build_bigquery_destination(dataset_id, table_id):
     The intented use of this function is to route table creation
     statements to different datasets based on environment
     """
+    # TODO: this has a hard dependency on airflow, and might be better off written as something that's a pure function,
+    # taking these as inputs. If necessary, wrap this with another function that injects airflow variables.
+    # NOTE: This pattern occurs quite a bit, and can be automated.
+    from airflow.models import Variable
+
     project_id = Variable.get("BIGQUERY_DESTINATION_PROJECT")
 
     server_env = config("SERVER_ENV", ServerEnv.LOCAL, cast=str)
@@ -76,6 +80,7 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
     if environment:
         return apply_env_variables_on_blob(template_queries, environment)
     return template_queries
+
 
 def run_bigquery_sqls(
     sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
