@@ -112,4 +112,4 @@ def get_chain_state(chain: chains.Chain, tigergraph_url: str):
     #          }
     #      }]
     #  }
-    return response_json["results"]["@@chainstate"]
+    return response_json["results"][0]["@@chainstate"]
