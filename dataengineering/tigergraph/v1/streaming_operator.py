@@ -6,17 +6,18 @@ import jinja2
 import numpy as np
 import pandas as pd
 from airflow.models import BaseOperator
-from dataengineering.airflow.bitquery import get_synced_status
-from coinprice.utils import get_latest_token_prices, get_tokens_metadata
-from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
-from dataengineering.tigergraph.v1.utils import form_tg_loading_request, tg_post_request
 
+from dataengineering.airflow.bitquery import get_synced_status
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
+from dataengineering.coinprice.utils import get_latest_token_prices, get_tokens_metadata
+from dataengineering.tigergraph.v1 import loading_map
+from dataengineering.tigergraph.v1.utils import form_tg_loading_request, tg_post_request
 
 
 class TGBTStreamingOperator(BaseOperator):
     """
-    This operator is used for streaming data from bitquery clickhouse onto merkle science tigergraph with
-    transformations being done via pandas.
+    This operator is used for streaming data from bitquery clickhouse onto merkle science
+    tigergraph with transformations being done via pandas.
     execute function is invoked when operator is invoked/run
     """
 
@@ -95,19 +96,6 @@ class TGBTStreamingOperator(BaseOperator):
         df.drop(columns=["decimals"], inplace=True)
 
         tg_batch_size = 10000
-
-        # streaming_links = df[["transaction_id", "sender_address", "receiver_address",
-        #                       "outgoing_value", "incoming_value", "outgoing_value_usd",
-        #                       "incoming_value_usd", "fee", "fee_usd", "block_date_time"]]
-        # for i in range(0, streaming_links.shape[0], tg_batch_size):
-        #     tg_post_request(
-        #         tg_request=form_tg_loading_request(tg_ip=self.tg_ip, chain=self.chain,
-        #                                            loading_job=loading_map["streaming_links"]["loading_job"]),
-        #         data=streaming_links[i:i + tg_batch_size].to_csv(quoting=csv.QUOTE_NONNUMERIC, index=False,
-        #                                                          header=False),
-        #         statistic=loading_map["streaming_links"]["stats"]
-        #     )
-        # del streaming_links
 
         logging.info("Running transactions loading job")
         transactions = df.groupby("transaction_id").apply(transactions_agg)
@@ -189,8 +177,8 @@ class TGBTStreamingOperator(BaseOperator):
 
 class RippleTGBTStreamingOperator(BaseOperator):
     """
-    This operator is used for streaming data from bitquery clickhouse onto merkle science tigergraph with
-    transformations being done via pandas.
+    This operator is used for streaming data from bitquery clickhouse onto
+    merkle science tigergraph with transformations being done via pandas.
     execute function is invoked when operator is invoked/run
     """
 
