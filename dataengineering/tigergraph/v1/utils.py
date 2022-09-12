@@ -2,7 +2,6 @@ import os
 import shutil
 import warnings
 
-import boto3
 import pandas as pd
 import requests
 from google.cloud import storage
@@ -11,6 +10,7 @@ from dataengineering import logger
 from dataengineering.tigergraph import exceptions
 
 # NOTE: Set GSQL_TIMEOUT to 20 minutes
+# TODO: move this to constants, ask why it's a string.
 GSQL_TIMEOUT = f"{20 * 60 * 1000}"
 
 
@@ -171,6 +171,8 @@ def run_s3_loading_job_tigergraph(**kwargs):
     Run file loading of S3 files to Tigergraph via HTTP POST
     :param kwargs:
     """
+    import boto3
+
     s3_client = boto3.client(
         "s3",
         region_name="us-east-2",
@@ -201,20 +203,21 @@ def run_multifile_gcs_loading_job_tigergraph(**kwargs):
     local_folder = f"{kwargs['CHAIN']}_{kwargs['RESOURCE']}_{kwargs['ds']}"
     prefix = f"{kwargs['CHAIN']}{kwargs['DEPLOY_LABEL']}/{kwargs['RESOURCE']}/{kwargs['ds']}/"
 
+    # TODO: Use tempfolder library for this stuff
     if os.path.exists(local_folder):
         shutil.rmtree(local_folder)
     os.makedirs(local_folder)
 
-    print(prefix)
-    print(local_folder)
+    logger.debug(prefix)
+    logger.debug(local_folder)
 
     blobs = list(client.list_blobs(kwargs["GCS_BUCKET"], prefix=prefix))
 
     if len(blobs) == 0:
-        raise AirflowException("No files generated")
+        raise exceptions.NoFilesGeneratedFromS3("No files generated")
 
     for blob in blobs:
-        print(blob)
+        logger.debug("{}", blob)
         filename = blob.name.split("/")[blob.name.count("/")]
         local_full_filepath = os.path.join(local_folder, filename)
         blob.download_to_filename(local_full_filepath)
