@@ -10,3 +10,14 @@ import pkg_resources
 __version__ = pkg_resources.get_distribution("dataengineering").version
 
 from .logger import logger
+
+try:
+    import airflow as _
+except ImportError:
+    import warnings
+
+    warnings.warn(
+        "The environment you're using this library in doesn't have Apache-Airflow installed, "
+        "and this library will have limited functionality.",
+        ImportWarning,
+    )

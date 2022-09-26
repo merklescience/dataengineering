@@ -1,13 +1,5 @@
 """DAGFactor builder for dags with required metadata."""
 
-from datetime import timedelta
-
-from airflow.models import DAG, Variable
-from decouple import config
-
-from dataengineering.airflow.bigquery.utils import ServerEnv
-from dataengineering.utils.notifications import task_fail_slack_alert
-
 
 class DAGFactory:
     """Class that provides useful method to build an Airflow DAG"""
@@ -64,6 +56,13 @@ class DAGFactory:
             default_args: (dict)
                 Other default DAG arguments which are not listed above can passed here
         """
+        from datetime import timedelta
+
+        from airflow.models import DAG, Variable
+        from decouple import config
+
+        from dataengineering.airflow.bigquery.utils import ServerEnv
+        from dataengineering.utils.notifications import task_fail_slack_alert
 
         DEFAULT_ARGS = {
             "owner": owner,

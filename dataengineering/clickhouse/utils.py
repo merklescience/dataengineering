@@ -1,18 +1,22 @@
 import datetime
-from typing import Optional
 
 from dataengineering import logger
 from dataengineering.chains import Chain
 from dataengineering.clickhouse import ClickhouseConnector
 
 
-def get_chain_state(
-    chain: Chain, query_date: Optional[datetime.datetime] = None, *args, **kwargs
-):
+def get_chain_state(chain: Chain, *args, **kwargs):
     """Returns the chain state of a cryptocurrency"""
-    if query_date is None:
+    if kwargs.get("query_date") is None:
         query_date = datetime.datetime.now()
-
+    else:
+        query_date = kwargs["query_date"]
+        if not isinstance(query_date, datetime.datetime):
+            raise TypeError(
+                "Expected a Datetime object for query date, not `{} (type={})`",
+                query_date,
+                type(query_date),
+            )
     query_date_str = query_date.strftime("%Y-%m-%d")
     if chain in [
         Chain.Bitcoin,
@@ -50,9 +54,9 @@ def get_chain_state(
             # The only way to avoid this is to get the nanosecond-precision txn timestamp,
             # which is in the txn_id
             # select all transactions where the time is the latest timestamp
-            "SELECT replace(replaceRegexpOne(transaction_id, '\d\\.\d\\.\d+-', ''), '-', '.') as block "
-            "FROM hedera.master WHERE block_date_time >= toDate('{}') "
-            "order by block desc limit 1 FORMAT JSON"
+            r"SELECT replace(replaceRegexpOne(transaction_id, '\d\\.\d\\.\d+-', ''), '-', '.') as block "
+            r"FROM hedera.master WHERE block_date_time >= toDate('{}') "
+            r"order by block desc limit 1 FORMAT JSON"
         ).format(query_date_str)
     else:
         query = (

@@ -1,22 +1,9 @@
 """Google Cloud Storage related utilities"""
 
-import logging
-import os
-import random
-import sys
-import time
 from json import dumps as json_dumps
 
-import google.auth
-import google.auth.transport.requests as tr_requests
 import httplib2
-from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
-from airflow.models import Variable
-from apiclient.errors import HttpError
-from apiclient.http import MediaFileUpload
 from decouple import config
-from google.cloud import storage
-from google.resumable_media.requests import RawChunkedDownload
 
 from dataengineering.airflow.bigquery.utils import ServerEnv
 
@@ -36,6 +23,8 @@ DEFAULT_MIMETYPE = "application/octet-stream"
 
 
 def upload_to_gcs(bucket, object_name, filename):
+    from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
     cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
     print("Building upload request...")
@@ -60,6 +49,8 @@ def download_from_gcs(bucket, object, filename):
     If you run into issues with this function while downloading large files,
     we need a more closer look at this function
     """
+    from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
     cloud_storage_hook = GoogleCloudStorageHook(gcp_conn_id="google_cloud_default")
 
     print("Building upload request...")
@@ -80,6 +71,8 @@ def build_gcs_bucket(bucket_id):
     The intented use of this function is to route table creation statements to
     different datasets based on environment.
     """
+    from airflow.models import Variable
+
     project_id = Variable.get("GCS_DESTINATION_PROJECT")
     dataset_id = Variable.get("GCS_DESTINATION_DATASET")
 
