@@ -13,6 +13,9 @@ from dataengineering.tigergraph.v1.utils import (
     logger,
     tg_post_request,
 )
+from dataengineering.types.tigergraph_chain_state_response import (
+    TigerGraphChainStateResponse,
+)
 
 
 def load_dataframe_to_tigergraph(
@@ -95,21 +98,7 @@ def get_chain_state(chain: chains.Chain, tigergraph_url: str):
     except requests.JSONDecodeError as e:
         logger.debug(response.content)
         raise e
-    # NOTE: Need to read the value of the payload,
-    # this will be in the following format:
-    # {
-    #      "version": {
-    #          "edition": "enterprise",
-    #          "api":"v2",
-    #          "schema":5
-    #      },
-    #      "error":false,
-    #      "message":"",
-    #      "results":[{
-    #          "@@chainstate": {
-    #              "latest_block_date_time":0,
-    #              "latest_block_number":0 <- this is what we need.
-    #          }
-    #      }]
-    #  }
-    return response_json["results"][0]["@@chainstate"]
+
+    chain_state_response = TigerGraphChainStateResponse.parse_obj(response_json)
+
+    return chain_state_response.results[0].chainstate

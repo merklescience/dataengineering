@@ -1,39 +1,39 @@
-"""Tigergraph-specific exceptions."""
+"""TigerGraph-specific exceptions."""
 
 
-class InvalidPayloadInTigergraphResponse(Exception):
+class InvalidPayloadInTigerGraphResponse(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class NoValidLinesinTigergraphRequest(Exception):
+class NoValidLinesinTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class RejectedLinesinTigergraphRequest(Exception):
+class RejectedLinesinTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class FailedConditionLineInTigergraphRequest(Exception):
+class FailedConditionLineInTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class InvalidJsonInTigergraphRequest(Exception):
+class InvalidJsonInTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class OversizeTokeninTigergraphRequest(Exception):
+class OversizeTokeninTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class NotEnoughTokenInTigergraphRequest(Exception):
+class NotEnoughTokenInTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class NotEnoughValidLinesInValidObjectInTigergraphRequest(Exception):
+class NotEnoughValidLinesInValidObjectInTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 
-class InvalidAttributeInTigergraphRequest(Exception):
+class InvalidAttributeInTigerGraphRequest(Exception):
     """This exception is raised when there is a problem with the TigerGraph request."""
 
 

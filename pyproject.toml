@@ -35,4 +35,6 @@ filterwarnings = [
     # use https://docs.python.org/3/library/warnings.html#warning-filter
     # for more filters
     "ignore::DeprecationWarning",
+    # TODO: figure out how to hide airflow-related warnings during testing.
+    "ignore:::airflow"
 ]

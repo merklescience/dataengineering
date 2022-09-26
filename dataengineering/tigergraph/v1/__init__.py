@@ -1,4 +1,4 @@
-"""Tigergraph v1 code
+"""TigerGraph v1 code
 Mostly copied over from `merklescience/airflow-dags/resources/tg`"""
 
 loading_map = {

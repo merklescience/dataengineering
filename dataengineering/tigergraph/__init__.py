@@ -1,4 +1,4 @@
-"""Tigergraph Utilities
+"""TigerGraph Utilities
 
 This module contains connectors and utilities for working with TigerGraph.
 
