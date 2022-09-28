@@ -15,8 +15,8 @@ from dataengineering import logger
 
 class ClickHouseBashHook(object):
     """
-    This is the connection hook for clickhouse operators. Function of this class use subprocess(bash) to
-    interact with clickhouse via curl request.
+    This is the connection hook for clickhouse operators. Function of this
+    class use subprocess(bash) to interact with clickhouse via curl request.
     """
 
     def __init__(self, clickhouse_conn_id: str):
@@ -26,19 +26,22 @@ class ClickHouseBashHook(object):
         :type clickhouse_conn_id: str
         """
         warnings.warn(
-            "This method of communicating with Clickouse will be deprecated in later versions of these utilities.",
+            """This method of communicating with Clickouse will be deprecated in later
+             versions of these utilities.""",
             DeprecationWarning,
         )
         self.clickhouse_conn_id = clickhouse_conn_id
 
     def _check_json_values(self, conn_details: str, key_type: str) -> (str, dict):
         """
-        This function validates whether the credentials fetched via airflow variable or environment variable
-        are valid json and contain host.
-        :param conn_details: connections details as fetched from airflow/environment variable
-        :type conn_details: str
-        :param key_type: whether the variable was airflow or environment, this is for informative exception
-        :type key_type: str
+        This function validates whether the credentials fetched via airflow
+        variable or environment variable are valid json and contain host.
+        :param conn_details
+            connections details as fetched from airflow/environment variable
+            :type conn_details: str
+        :param key_type:
+            whether the variable was airflow or environment, this is for informative exception
+            :type key_type: str
         :return: host & rest of connection details
         :rtype: (str, dict)
         """
@@ -58,10 +61,12 @@ class ClickHouseBashHook(object):
 
     def get_credentials(self) -> (str, dict):
         """
-        This function will get the clickhouse connection details. It will first check in airflow variables and if not
-        found then in environment variable. If not found anywhere then an exception will be raised. In future this
-        will also be able to utilise airflow connections to find connection details, this is commented part of
-        code as it requires airflow 2.0+ version.
+        This function will get the clickhouse connection details. It will first check
+        in airflow variables and if not found then in environment variable.
+        If not found anywhere then an exception will be raised. In future this
+        will also be able to utilise airflow connections to find connection details,
+        this is commented part of code as it requires airflow 2.0+ version.
+
         :return: host & rest of connection details
         :rtype: (str, dict)
         """
@@ -69,27 +74,30 @@ class ClickHouseBashHook(object):
         if airflow_present:
             found = False
             # The below would work with airflow 2.0+ versions only
-            # try:
-            #     from airflow.models.connection import Connection
-            #     from airflow.exceptions import AirflowNotFoundException
-            #     conn = Connection.get_connection_from_secrets(self.clickhouse_conn_id)
-            #     conn_details = {}
-            #     host = conn.host
-            #     if host is None:
-            #         raise KeyError(f"{self.clickhouse_conn_id} in connections does not have host key")
-            #     if conn.port:
-            #         conn_details["port"] = int(conn.port)
-            #     if conn.login:
-            #         conn_details["user"] = conn.login
-            #     if conn.password:
-            #         conn_details["password"] = conn.password
-            #     if self.database:
-            #         conn_details["database"] = self.database
-            #     elif conn.schema:
-            #         conn_details["database"] = conn.schema
-            #     return host, conn_details
-            # except AirflowNotFoundException:
-            #     found = False
+            try:
+                from airflow.exceptions import AirflowNotFoundException
+                from airflow.models.connection import Connection
+
+                conn = Connection.get_connection_from_secrets(self.clickhouse_conn_id)
+                conn_details = {}
+                host = conn.host
+                if host is None:
+                    raise KeyError(
+                        f"{self.clickhouse_conn_id} in connections does not have host key"
+                    )
+                if conn.port:
+                    conn_details["port"] = int(conn.port)
+                if conn.login:
+                    conn_details["user"] = conn.login
+                if conn.password:
+                    conn_details["password"] = conn.password
+                if self.database:
+                    conn_details["database"] = self.database
+                elif conn.schema:
+                    conn_details["database"] = conn.schema
+                return host, conn_details
+            except AirflowNotFoundException:
+                found = False
             if not found:
                 try:
                     from airflow.models.variable import Variable
@@ -124,9 +132,10 @@ class ClickHouseBashHook(object):
     @staticmethod
     def _check_file_for_clickhouse_error(filename) -> None:
         """
-        This checks if first/last 10 lines of file contains e.displayText() which is a way for checking
-        clickhouse errors. It also uses the python subprocess aka bash, use head & tail and piping the output to grep
-        function.
+        This checks if first/last 10 lines of file contains e.displayText()
+        which is a way for checking clickhouse errors. It also uses the python
+        subprocess aka bash, use head & tail and piping the output to grep function.
+
         :param filename: file which needs to be checked
         :type filename: str
         :return: raises error if found
@@ -158,11 +167,12 @@ class ClickHouseBashHook(object):
     @staticmethod
     def _check_stdout(result: subprocess.CompletedProcess, curl_request) -> None:
         """
-        This function checks the http response code and bash exit code returned from the bash curl request.
+        This function checks the http response code and bash exit code returned
+        from the bash curl request.
         :param result: result output of subprocess run
         :type result: CompletedProcess
-        :param curl_request: the actual list of commands run via subprocess, this is just for making
-        exception informative
+        :param curl_request: the actual list of commands run via subprocess,
+        this is just for making exception informative
         :type curl_request: list
         :return: raises exception if response code is anything other than 200 or bash exit code i
         :rtype: None
@@ -190,8 +200,8 @@ class ClickHouseBashHook(object):
         self, sql: str, filename: str, file_format: str = "csv", **kwargs
     ) -> None:
         """
-        This downloads sql query result from clickhouse to a local file. It uses python subprocess(bash) to fetch
-        data via curl and downloads data directly to file.
+        This downloads sql query result from clickhouse to a local file. It uses python
+        subprocess(bash) to fetch data via curl and downloads data directly to file.
         :param sql: sql query to fetch data
         :type sql: str
         :param filename: local file's name in which results will be downloaded to
@@ -235,7 +245,9 @@ class ClickHouseBashHook(object):
         logger.debug("Echo process terminated ,checking http response code")
         self._check_stdout(result, curl_request)
         # if int(result.stdout.decode()) != 200:
-        #     raise Exception(f"HTTP response code {int(result.stdout.decode())} received instead of 200")
+        #     raise Exception(
+        #       f"HTTP response code {int(result.stdout.decode())} received instead of 200"
+        #       )
         # logger.debug("Checked HTTP response ,checking bash return code")
         # if result.returncode != 0:
         #     raise Exception("Non 0 code returned from curl request " + " ".join(curl_request))
@@ -251,7 +263,9 @@ class ClickHouseBashHook(object):
         **kwargs,
     ) -> None:
         """
-        This will load a local file to clickhouse. It uses python subprocess(bash) to load data via curl request.
+        This will load a local file to clickhouse. It uses python subprocess(bash) to load
+        data via curl request.
+
         :param database: target database
         :type database: str
         :param table: target table
@@ -267,6 +281,8 @@ class ClickHouseBashHook(object):
         """
         host, conn_details = self.get_credentials()
         data_format = "CSVWithNames"
+        execution_date = str(kwargs["execution_date"])
+
         if file_format == "parquet":
             data_format = "Parquet"
         elif file_format == "json":
@@ -274,7 +290,7 @@ class ClickHouseBashHook(object):
         sql = f"INSERT INTO {database}.{table} FORMAT {data_format}"
         response_file = (
             f"{kwargs['task_instance'].dag_id}_{kwargs['task_instance'].task_id}_"
-            f"{str(kwargs['execution_date']).replace(' ', '').replace('-', '').replace(':', '')[:-5]}.txt"
+            f"{execution_date.replace(' ', '').replace('-', '').replace(':', '')[:-5]}.txt"
         )
         if os.path.isfile(response_file):
             os.remove(response_file)
@@ -303,8 +319,9 @@ class ClickHouseBashHook(object):
 
     def execute_query(self, sql: str, **kwargs):
         """
-        This is for executing sql queries which don't end up with results like DDLs and DMLs. It uses python
-        subprocess(bash) for executing SQLs via curl request.
+        This is for executing sql queries which don't end up with results like DDLs
+        and DMLs. It uses python subprocess(bash) for executing SQLs via curl request.
+
         :param sql: sql query to execute
         :type sql: str
         :param kwargs:
@@ -314,9 +331,10 @@ class ClickHouseBashHook(object):
         """
         host, conn_details = self.get_credentials()
         individual_queries = sql.split(";")
+        execution_date = str(kwargs["execution_date"])
         response_file = (
             f"{kwargs['task_instance'].dag_id}_{kwargs['task_instance'].task_id}_"
-            f"{str(kwargs['execution_date']).replace(' ', '').replace('-', '').replace(':', '')[:-5]}.txt"
+            f"{execution_date.replace(' ', '').replace('-', '').replace(':', '')[:-5]}.txt"
         )
         if os.path.isfile(response_file):
             os.remove(response_file)
