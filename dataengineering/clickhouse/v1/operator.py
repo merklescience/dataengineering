@@ -325,6 +325,8 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
         self.file_format = file_format
 
     def execute(self, context: Dict[str, Any] = None) -> None:
+        from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
         ch_hook = ClickHouseBashHook(clickhouse_conn_id=self.clickhouse_conn_id)
         gcs_hook = GoogleCloudStorageHook(
             gcp_conn_id="google_cloud_default"
