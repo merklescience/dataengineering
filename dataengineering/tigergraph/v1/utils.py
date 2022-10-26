@@ -12,6 +12,8 @@ from dataengineering.tigergraph import exceptions
 # NOTE: Set GSQL_TIMEOUT to 20 minutes
 # TODO: move this to constants, ask why it's a string.
 GSQL_TIMEOUT = f"{20 * 60 * 1000}"
+GSQL_THREAD_LIMIT = '10'
+MAX_RETRY_COUNT = 5
 
 
 def _form_tigergraph_request(tigergraph_ip, chain, loading_job) -> str:
