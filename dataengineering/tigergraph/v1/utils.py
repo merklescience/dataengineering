@@ -52,7 +52,7 @@ def form_tg_loading_request(tg_ip, chain, loading_job) -> str:
     )
 
 
-def tg_post_request(tg_request, data, statistic):
+def tg_post_request(tigergraph_request, data, statistic):
     """Make Tigergraph HTTP POST request
     :param tg_request:
     :param data:
@@ -60,7 +60,7 @@ def tg_post_request(tg_request, data, statistic):
     """
     logger.debug(f"Request to Tigergraph URL={tg_request}")
     response = requests.post(
-        tg_request, data=data, headers={"GSQL-TIMEOUT": GSQL_TIMEOUT}
+        tigergraph_request, data=data, headers={"GSQL-TIMEOUT": GSQL_TIMEOUT}
     )
     response.raise_for_status()
     try:
