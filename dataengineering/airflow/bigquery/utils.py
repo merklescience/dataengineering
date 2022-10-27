@@ -1,8 +1,9 @@
+import logging
 import os
 
 import jinja2
-from airflow.models import Variable
 from decouple import config
+from google.cloud import bigquery
 
 from dataengineering.constants import ServerEnv
 
@@ -14,6 +15,11 @@ def build_bigquery_destination(dataset_id, table_id):
     The intented use of this function is to route table creation
     statements to different datasets based on environment
     """
+    # TODO: this has a hard dependency on airflow, and might be better off written as something that's a pure function,
+    # taking these as inputs. If necessary, wrap this with another function that injects airflow variables.
+    # NOTE: This pattern occurs quite a bit, and can be automated.
+    from airflow.models import Variable
+
     project_id = Variable.get("BIGQUERY_DESTINATION_PROJECT")
 
     server_env = config("SERVER_ENV", ServerEnv.LOCAL, cast=str)
@@ -75,15 +81,30 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
         return apply_env_variables_on_blob(template_queries, environment)
     return template_queries
 
-def format_sql_query(sql, environment):
-     """
-     to render templated  BQ query
-     :param sql: templated query
-     :param environment: variables to fill in
-     :return: runable query
-     """
 
-     for key, value in environment.items():
-         if isinstance(key, str) and isinstance(value, str):
-             sql = sql.replace(f"[[ {key} ]]", value)
-     return sql
+def run_bigquery_sqls(
+    sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
+) -> None:
+    """
+    This function is for running bigquery queries which don't return results like DDLs,DMLs,data exports
+    :param sql: query, can also pass multiple queries separated via ';'
+    :type sql: str
+    :param project_id: GCP project id
+    :type project_id: str
+    :param job_id_prefix: job prefix, this is helpful in identifying specific bq jobs
+    :type job_id_prefix: str
+    :param args:
+    :type args:
+    :param kwargs:
+    :type kwargs:
+    :return:
+    :rtype:
+    """
+    individual_queries = sql.split(";")
+    client = bigquery.Client(project=project_id)
+    for each_query in individual_queries:
+        if each_query == "":
+            continue
+        logging.info("Running BQ query " + each_query)
+        query_job = client.query(each_query, job_id_prefix=job_id_prefix)
+        results = query_job.result()

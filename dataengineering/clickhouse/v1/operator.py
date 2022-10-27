@@ -1,17 +1,19 @@
+import json
 import logging
 import os
-from typing import Optional, Dict, Any
-from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
-from airflow.models import BaseOperator, Variable
+from typing import Any, Dict, Optional
 
-from dataengineering.airflow.bitquery import get_synced_status
-from dataengineering.coinprice.utils import get_latest_token_prices
-from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
-from dataengineering.clickhouse.v1.requests import execute_sql
 import jinja2
 import pandas as pd
 import requests
-import json
+
+# FIXME: importing BaseOperator is unavoidable since the class is defined on the global scope, as it should be.
+from airflow.models import BaseOperator
+
+from dataengineering.airflow.bitquery import get_synced_status
+from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
+from dataengineering.clickhouse.v1.requests import execute_sql
+from dataengineering.coinprice.utils import get_latest_token_prices
 
 
 def convert_bytes(num):
@@ -37,6 +39,8 @@ def get_file_size(file_path):
 
 
 def upload_to_gcs(bucket, object_name, filename):
+    from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
     cloud_storage_hook = GoogleCloudStorageHook(
         gcp_conn_id="google_cloud_default"
     )
@@ -46,7 +50,7 @@ def upload_to_gcs(bucket, object_name, filename):
         + ", the size of file is "
         + get_file_size(filename)
     )
-    cloud_storage_hook.upload(bucket=bucket, object=object_name, filename=filename)
+    cloud_storage_hook.upload(bucket_name=bucket, object_name=object_name, filename=filename)
 
 
 class ClickhouseGCSOperator(BaseOperator):
@@ -193,13 +197,15 @@ class ClickhouseGCStoCHOperator(BaseOperator):
         self.file_format = file_format
 
     def execute(self, context: Dict[str, Any] = None) -> None:
+        from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
         if os.path.isfile(self.local_filename):
             os.remove(self.local_filename)
         GoogleCloudStorageHook(
             gcp_conn_id="google_cloud_default"
         ).download(
-            bucket=self.gcs_bucket,
-            object=self.gcs_path + self.gcs_filename,
+            bucket_name=self.gcs_bucket,
+            object_name=self.gcs_path + self.gcs_filename,
             filename=self.local_filename,
         )
         self.ch_hook.run_insert_job(
@@ -319,6 +325,8 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
         self.file_format = file_format
 
     def execute(self, context: Dict[str, Any] = None) -> None:
+        from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
         ch_hook = ClickHouseBashHook(clickhouse_conn_id=self.clickhouse_conn_id)
         gcs_hook = GoogleCloudStorageHook(
             gcp_conn_id="google_cloud_default"
@@ -332,7 +340,7 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
             )
             if os.path.isfile(filename):
                 os.remove(filename)
-            gcs_hook.download(bucket=self.gcs_bucket, object=file, filename=filename)
+            gcs_hook.download(bucket_name=self.gcs_bucket, object_name=file, filename=filename)
             ch_hook.run_insert_job(
                 database=self.database,
                 table=self.table,
@@ -616,10 +624,17 @@ class ClickhouseExecuteWithURIOperator(BaseOperator):
         self.uri = uri
 
     def execute(self, context: Dict[str, Any] = None):
-        conn_details = {"host": self.uri, "user": self.user, "password": self.password, "database": "default"}
+        conn_details = {
+            "host": self.uri,
+            "user": self.user,
+            "password": self.password,
+            "database": "default",
+        }
         individual_queries = self.sql.split(";")
         for each_query in individual_queries:
             if each_query == "":
                 continue
             logging.info("Executing SQL " + each_query)
-            logging.info(f"Response from query - {execute_sql(each_query, conn_details,auth_type='url')}")
+            logging.info(
+                f"Response from query - {execute_sql(each_query, conn_details,auth_type='url')}"
+            )

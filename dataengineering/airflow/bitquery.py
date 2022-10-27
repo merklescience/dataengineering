@@ -1,13 +1,12 @@
+import datetime as dt
 import json
 import logging
-import datetime as dt
 
 import jinja2
 import requests
-from airflow.models import Variable
+from google.cloud import bigquery
 
 from dataengineering.clickhouse.v1.bash_hook import ClickHouseBashHook
-from google.cloud import bigquery
 
 
 def make_ch_request(query: str, ch_conn_id: str, exception_msg: str) -> dict:
@@ -191,6 +190,8 @@ def get_synced_status(
     :return: dictionary with the keys last_synced_block,last_synced_block_date,latest_block,latest_block_date
     :rtype: dict
     """
+    from airflow.models import Variable
+
     var_name = get_variable_name(chain=chain, database=database, var_prefix=var_prefix)
     sync_status = Variable.get(var_name, deserialize_json=True)
     if sync_status is None:
@@ -235,6 +236,8 @@ def check_sync_status(
     :return: true or false for short circuit operator to proceed
     :rtype: bool
     """
+    from airflow.models import Variable
+
     sync_status = get_synced_status(
         chain=chain, database=database, var_prefix=var_prefix
     )
@@ -304,6 +307,8 @@ def set_latest_block(
     :return: None
     :rtype: None
     """
+    from airflow.models import Variable
+
     assert not (
         (database == "tigergraph") and (tg_ip is None)
     ), f"tg ip can't be none when database is {database}"
@@ -389,31 +394,3 @@ def validate_bt_bq_counts(
     logging.info(f"BQ count:{bq_count}")
     if int(data["total_count"]) != int(bq_count):
         raise Exception("BQ and BT CH count check failed")
-
-
-def run_bq_sqls(
-    sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
-) -> None:
-    """
-    This function is for running bigquery queries which don't return results like DDLs,DMLs,data exports
-    :param sql: query, can also pass multiple queries separated via ';'
-    :type sql: str
-    :param project_id: GCP project id
-    :type project_id: str
-    :param job_id_prefix: job prefix, this is helpful in identifying specific bq jobs
-    :type job_id_prefix: str
-    :param args:
-    :type args:
-    :param kwargs:
-    :type kwargs:
-    :return:
-    :rtype:
-    """
-    individual_queries = sql.split(";")
-    client = bigquery.Client(project=project_id)
-    for each_query in individual_queries:
-        if each_query == "":
-            continue
-        logging.info("Running BQ query " + each_query)
-        query_job = client.query(each_query, job_id_prefix=job_id_prefix)
-        results = query_job.result()
