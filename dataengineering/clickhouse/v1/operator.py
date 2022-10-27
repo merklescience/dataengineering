@@ -50,7 +50,7 @@ def upload_to_gcs(bucket, object_name, filename):
         + ", the size of file is "
         + get_file_size(filename)
     )
-    cloud_storage_hook.upload(bucket=bucket, object=object_name, filename=filename)
+    cloud_storage_hook.upload(bucket_name=bucket, object_name=object_name, filename=filename)
 
 
 class ClickhouseGCSOperator(BaseOperator):
@@ -204,8 +204,8 @@ class ClickhouseGCStoCHOperator(BaseOperator):
         GoogleCloudStorageHook(
             gcp_conn_id="google_cloud_default"
         ).download(
-            bucket=self.gcs_bucket,
-            object=self.gcs_path + self.gcs_filename,
+            bucket_name=self.gcs_bucket,
+            object_name=self.gcs_path + self.gcs_filename,
             filename=self.local_filename,
         )
         self.ch_hook.run_insert_job(
@@ -325,6 +325,8 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
         self.file_format = file_format
 
     def execute(self, context: Dict[str, Any] = None) -> None:
+        from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
         ch_hook = ClickHouseBashHook(clickhouse_conn_id=self.clickhouse_conn_id)
         gcs_hook = GoogleCloudStorageHook(
             gcp_conn_id="google_cloud_default"
@@ -338,7 +340,7 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
             )
             if os.path.isfile(filename):
                 os.remove(filename)
-            gcs_hook.download(bucket=self.gcs_bucket, object=file, filename=filename)
+            gcs_hook.download(bucket_name=self.gcs_bucket, object_name=file, filename=filename)
             ch_hook.run_insert_job(
                 database=self.database,
                 table=self.table,
