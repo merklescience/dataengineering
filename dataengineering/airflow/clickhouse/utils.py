@@ -1,13 +1,15 @@
-import ast
 import os
 from datetime import timedelta
 
 from airflow.models import Variable
 from airflow.operators.bash_operator import BashOperator
 
-CLICKHOUSE_URI = Variable.get("CLICKHOUSE_URI", "")
-CH_USER = Variable.get("CH_USER", "")
-CH_PASSWORD = Variable.get("CH_PASSWORD", "")
+from dataengineering.airflow.constants import (
+    CLICKHOUSE_PASSWORD,
+    CLICKHOUSE_URI,
+    CLICKHOUSE_URIS,
+    CLICKHOUSE_USER,
+)
 
 SETUP_COMMAND = (
     "set -o xtrace && " + "export LC_ALL=C.UTF-8 && "
@@ -166,14 +168,13 @@ def _YYYY_MM(start_year):
 
 
 def _build_clickhouse_optimize_http_command(resource, start_year):
-    CLICKHOUSE_URIS = ast.literal_eval(Variable.get("CLICKHOUSE_URIS", ""))
 
     command_list = []
     for partition in _YYYY_MM(start_year):
         for each_clickhouse_instance_uri, shard_db in CLICKHOUSE_URIS:
             command_list.append(
                 f"eval ' echo 'OPTIMIZE TABLE {shard_db}.{resource} PARTITION {partition} FINAL DEDUPLICATE' "
-                f"| curl http://{CH_USER}:{CH_PASSWORD}@{each_clickhouse_instance_uri}:8123?query= --data-binary @- '"
+                f"| curl http://{CLICKHOUSE_USER}:{CLICKHOUSE_PASSWORD}@{each_clickhouse_instance_uri}:8123?query= --data-binary @- '"
             )
 
     command = " && ".join(command_list)
