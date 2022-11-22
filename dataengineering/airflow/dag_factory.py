@@ -22,12 +22,13 @@ class DAGFactory:
         start_date,
         schedule_interval,
         default_args=dict(),
+        user_defined_macros=dict(),
     ):
         """
         params:
             dagname(str): the name of the dag
-            default_args(dict): a dict with the specific keys you want to edit from the original DEFAULT_ARGS
-            start_date(Date): the start date of the DAG('2020-12-29')
+            default_args(dict): a dict with the specific keys you want to edit from the original
+            DEFAULT_ARGS start_date(Date): the start date of the DAG('2020-12-29')
             cron(str): the cron expression or the schedule
         returns:
             DAG object
@@ -53,6 +54,7 @@ class DAGFactory:
             "dagrun_timeout": dagrun_timeout,
             "description": description,
             "tags": tags,
+            "user_defined_macros": user_defined_macros,
         }
 
         dag = DAG(dagname, **dagargs)
