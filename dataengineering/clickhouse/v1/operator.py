@@ -333,7 +333,7 @@ class ClickhouseGCSFoldertoCHOperator(BaseOperator):
         )
         dag_id = context.get("task_instance").dag_id
         task_id = context.get("task_instance").task_id
-        files = gcs_hook.list(bucket=self.gcs_bucket, prefix=self.gcs_path)
+        files = gcs_hook.list(bucket_name=self.gcs_bucket, prefix=self.gcs_path)
         for file in files:
             filename = f"{dag_id}_{task_id}_{context.get('ds_nodash')}_{file}".replace(
                 self.gcs_path, ""
