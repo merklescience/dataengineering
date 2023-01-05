@@ -118,9 +118,10 @@ def run_flush_sqls(
 
     """
     client = bigquery.Client(project=project_id)
-    if client.get_table(fully_qualified_table):
+    try:
+        client.get_table(fully_qualified_table)
         query_job = client.query(f"DELETE FROM {fully_qualified_table} WHERE {partition_filter}",
                                  job_id_prefix=job_id_prefix)
         results = query_job.result()
-    else:
+    except google.api_core.exceptions.NotFound:
         return True
