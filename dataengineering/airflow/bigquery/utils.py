@@ -83,7 +83,7 @@ def join_bigquery_queries_in_folder(queries_folder, environment=None):
 
 
 def run_bigquery_sqls(
-    sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
+        sql: str, project_id: str = None, job_id_prefix: str = None, *args, **kwargs
 ) -> None:
     """
     This function is for running bigquery queries which don't return results like DDLs,DMLs,data exports
@@ -108,3 +108,19 @@ def run_bigquery_sqls(
         logging.info("Running BQ query " + each_query)
         query_job = client.query(each_query, job_id_prefix=job_id_prefix)
         results = query_job.result()
+
+
+def run_flush_sqls(
+        partition_filter: str, fully_qualified_table: str, project_id: str = None, job_id_prefix: str = None, *args,
+        **kwargs
+) -> None:
+    """
+
+    """
+    client = bigquery.Client(project=project_id)
+    if client.get_table(fully_qualified_table):
+        query_job = client.query(f"DELETE FROM {fully_qualified_table} WHERE {partition_filter}",
+                                 job_id_prefix=job_id_prefix)
+        results = query_job.result()
+    else:
+        return True
