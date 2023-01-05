@@ -6,6 +6,7 @@ from decouple import config
 from google.cloud import bigquery
 
 from dataengineering.constants import ServerEnv
+from google.api_core.exceptions import NotFound
 
 
 def build_bigquery_destination(dataset_id, table_id):
@@ -123,5 +124,5 @@ def run_flush_sqls(
         query_job = client.query(f"DELETE FROM {fully_qualified_table} WHERE {partition_filter}",
                                  job_id_prefix=job_id_prefix)
         results = query_job.result()
-    except google.api_core.exceptions.NotFound:
+    except NotFound:
         return True
