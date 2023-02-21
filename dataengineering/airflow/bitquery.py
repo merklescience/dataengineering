@@ -350,7 +350,7 @@ def validate_bt_bq_counts(
     ch_conn_id: str,
     ch_check_query: str,
     bq_table: str = "raw_tld",
-    old_bq_project: bool = True,
+    bq_project: str = "intelligence-team",
     *args,
     **kwargs,
 ) -> None:
@@ -365,8 +365,8 @@ def validate_bt_bq_counts(
     :type ch_conn_id: str
     :param ch_check_query: clickhouse count check query
     :type ch_check_query: str
-    :param old_bq_project: a flag to route queries to intelligence team or data-engg-crypto-batch-etl
-    :type old_bq_project: bool
+    :param bq_project: passes the name of bq project to access
+    :type bq_project: str
     :param args:
     :type args:
     :param kwargs:
@@ -374,18 +374,11 @@ def validate_bt_bq_counts(
     :return: None
     :rtype: None
     """
-    if old_bq_project:
-        bq_query = (
-            f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
-            f"FROM `intelligence-team.crypto_{chain}.{bq_table}` "
-            f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
-        )
-    else:
-        bq_query = (
-            f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
-            f"FROM `data-engg-crypto-batch-etl-dev.crypto_{chain}.{bq_table}` "
-            f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
-        )
+    bq_query = (
+        f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
+        f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
+        f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
+    )
     client = bigquery.Client()
     bq_result = list(client.query(bq_query).result())
     bq_count = 0
