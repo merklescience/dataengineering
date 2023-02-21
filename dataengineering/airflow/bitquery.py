@@ -350,6 +350,7 @@ def validate_bt_bq_counts(
     ch_conn_id: str,
     ch_check_query: str,
     bq_table: str = "raw_tld",
+    bq_project: str = "intelligence-team",
     *args,
     **kwargs,
 ) -> None:
@@ -364,6 +365,8 @@ def validate_bt_bq_counts(
     :type ch_conn_id: str
     :param ch_check_query: clickhouse count check query
     :type ch_check_query: str
+    :param bq_project: passes the name of bq project to access
+    :type bq_project: str
     :param args:
     :type args:
     :param kwargs:
@@ -373,7 +376,7 @@ def validate_bt_bq_counts(
     """
     bq_query = (
         f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
-        f"FROM `intelligence-team.crypto_{chain}.{bq_table}` "
+        f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
         f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
     )
     client = bigquery.Client()
