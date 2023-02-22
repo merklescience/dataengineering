@@ -377,7 +377,13 @@ def validate_bt_bq_counts(
     :rtype: None
     """
     # This if condition is because few tables don't have block_timestamp and the task to validate is failing
-    if kwargs.get('add_block_timestamp'):
+    for argument in args:
+        logging.info(f"arguments: {argument}")
+    for k, v in kwargs.items():
+        logging.info(f"kwargs: {k} ----- {v}")
+    condition_variable = kwargs.get('add_block_timestamp')
+    logging.info(f"condition variable: {condition_variable}")
+    if condition_variable:
         bq_query = (
             f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
             f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
