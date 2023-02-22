@@ -351,6 +351,7 @@ def validate_bt_bq_counts(
     ch_check_query: str,
     bq_table: str = "raw_tld",
     bq_project: str = "intelligence-team",
+    add_block_timestamp: bool = True,
     *args,
     **kwargs,
 ) -> None:
@@ -367,6 +368,8 @@ def validate_bt_bq_counts(
     :type ch_check_query: str
     :param bq_project: passes the name of bq project to access
     :type bq_project: str
+    :param add_block_timestamp: Flag to add block_timestamp in the bq_query or not
+    :type add_block_timestamp: bool
     :param args:
     :type args:
     :param kwargs:
@@ -374,10 +377,12 @@ def validate_bt_bq_counts(
     :return: None
     :rtype: None
     """
+    # This is abstracted out because few tables don't have block_timestamp and the task to validate is failing
+    where_condition = "DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt" if add_block_timestamp else "TRUE"
     bq_query = (
         f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
         f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
-        f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
+        f"WHERE {where_condition}"
     )
     client = bigquery.Client()
     bq_result = list(client.query(bq_query).result())
