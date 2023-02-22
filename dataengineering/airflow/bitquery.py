@@ -377,13 +377,18 @@ def validate_bt_bq_counts(
     :return: None
     :rtype: None
     """
-    # This is abstracted out because few tables don't have block_timestamp and the task to validate is failing
-    where_condition = "DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt" if add_block_timestamp else "TRUE"
-    bq_query = (
-        f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
-        f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
-        f"WHERE {where_condition}"
-    )
+    # This if condition is because few tables don't have block_timestamp and the task to validate is failing
+    if add_block_timestamp:
+        bq_query = (
+            f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
+            f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
+            f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
+        )
+    else:
+        bq_query = (
+            f"SELECT count(*) as bq_no_of_txns "
+            f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
+        )
     client = bigquery.Client()
     bq_result = list(client.query(bq_query).result())
     bq_count = 0
