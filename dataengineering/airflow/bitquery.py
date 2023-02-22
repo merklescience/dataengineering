@@ -36,11 +36,10 @@ def make_ch_request(query: str, ch_conn_id: str, exception_msg: str) -> dict:
     )
     if resp.status_code != 200:
         raise Exception(exception_msg)
-    try:
-        data = json.loads(resp.content.decode()).get("data")[0]
-    except ValueError:
-        data = resp.content.decode()
-    return data
+    data = json.loads(resp.content.decode())
+    if isinstance(data, int):
+        return {"result": data}
+    return data.get("data")[0]
 
 
 def get_latest_block_bt(
