@@ -388,6 +388,7 @@ def validate_bt_bq_counts(
             f"SELECT count(*) as bq_no_of_txns "
             f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
         )
+    logging.info(f"BQ QUERY ---- {bq_query}-------")
     client = bigquery.Client()
     bq_result = list(client.query(bq_query).result())
     bq_count = 0
