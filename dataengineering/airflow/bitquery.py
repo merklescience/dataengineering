@@ -36,8 +36,10 @@ def make_ch_request(query: str, ch_conn_id: str, exception_msg: str) -> dict:
     )
     if resp.status_code != 200:
         raise Exception(exception_msg)
-    data = json.loads(resp.content.decode()).get("data")[0]
-    return data
+    data = json.loads(resp.content.decode())
+    if isinstance(data, int):
+        return {"total_count": data}
+    return data.get("data")[0]
 
 
 def get_latest_block_bt(
@@ -367,6 +369,8 @@ def validate_bt_bq_counts(
     :type ch_check_query: str
     :param bq_project: passes the name of bq project to access
     :type bq_project: str
+    :param add_block_timestamp: Flag to add block_timestamp in the bq_query or not
+    :type add_block_timestamp: bool
     :param args:
     :type args:
     :param kwargs:
@@ -374,11 +378,19 @@ def validate_bt_bq_counts(
     :return: None
     :rtype: None
     """
-    bq_query = (
-        f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
-        f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
-        f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
-    )
+    # This if condition is because few tables don't have block_timestamp and the task to validate is failing
+    if kwargs.get('add_block_timestamp'):
+        bq_query = (
+            f"SELECT DATE(block_timestamp) as dt,count(*) as bq_no_of_txns "
+            f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
+            f"WHERE DATE(block_timestamp) = '{kwargs.get('ds')}' GROUP BY dt"
+        )
+    else:
+        bq_query = (
+            f"SELECT count(*) as bq_no_of_txns "
+            f"FROM `{bq_project}.crypto_{chain}.{bq_table}` "
+        )
+    logging.info(f"BQ QUERY ---- {bq_query}-------")
     client = bigquery.Client()
     bq_result = list(client.query(bq_query).result())
     bq_count = 0
