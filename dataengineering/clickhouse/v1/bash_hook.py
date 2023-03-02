@@ -299,6 +299,7 @@ class ClickHouseBashHook(object):
             "-H",
             f"X-ClickHouse-Key: {conn_details['password']}",
         ]
+        logger.info(f"curl request: {curl_request}")
         result = subprocess.run(curl_request, stdout=subprocess.PIPE, timeout=3600)
         self._check_stdout(result, curl_request)
         self._check_file_for_clickhouse_error(response_file)
