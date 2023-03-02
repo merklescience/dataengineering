@@ -95,7 +95,7 @@ class ClickHouseBashHook(object):
                 try:
                     from airflow.models.variable import Variable
 
-                    conn = json.dumps(config(self.clickhouse_conn_id))
+                    conn = config(self.clickhouse_conn_id)
                     return self._check_json_values(
                         conn_details=conn, key_type="Variables"
                     )
