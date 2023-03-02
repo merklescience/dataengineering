@@ -11,6 +11,7 @@ from importlib import util
 from urllib.request import pathname2url
 
 from dataengineering import logger
+from decouple import config
 
 
 class ClickHouseBashHook(object):
@@ -94,7 +95,7 @@ class ClickHouseBashHook(object):
                 try:
                     from airflow.models.variable import Variable
 
-                    conn = Variable.get(self.clickhouse_conn_id, default_var=None)
+                    conn = config(self.clickhouse_conn_id)
                     return self._check_json_values(
                         conn_details=conn, key_type="Variables"
                     )
