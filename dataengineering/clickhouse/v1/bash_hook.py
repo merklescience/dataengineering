@@ -96,7 +96,7 @@ class ClickHouseBashHook(object):
                     from airflow.models.variable import Variable
 
                     conn = config(self.clickhouse_conn_id)
-                    logger.ingo(f"variable : {self.clickhouse_conn_id} and type of it: {type(self.clickhouse_conn_id)}")
+                    logger.info(f"variable : {self.clickhouse_conn_id} and type of it: {type(self.clickhouse_conn_id)}")
                     logger.info(f"variable : {conn} and type of it : {type(conn)}")
                     return self._check_json_values(
                         conn_details=conn, key_type="Variables"
