@@ -96,8 +96,6 @@ class ClickHouseBashHook(object):
                     from airflow.models.variable import Variable
 
                     conn = config(self.clickhouse_conn_id)
-                    logger.info(f"variable : {self.clickhouse_conn_id} and type of it: {type(self.clickhouse_conn_id)}")
-                    logger.info(f"variable : {conn} and type of it : {type(conn)}")
                     return self._check_json_values(
                         conn_details=conn, key_type="Variables"
                     )
@@ -299,7 +297,6 @@ class ClickHouseBashHook(object):
             "-H",
             f"X-ClickHouse-Key: {conn_details['password']}",
         ]
-        logger.info(f"curl request: {curl_request}")
         result = subprocess.run(curl_request, stdout=subprocess.PIPE, timeout=3600)
         self._check_stdout(result, curl_request)
         self._check_file_for_clickhouse_error(response_file)
