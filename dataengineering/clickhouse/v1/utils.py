@@ -5,8 +5,8 @@ import subprocess
 from datetime import timedelta
 
 import jinja2
-from airflow.models import Variable
 from airflow.operators.bash_operator import BashOperator
+from decouple import config
 
 from dataengineering.airflow.constants import (
     CLICKHOUSE_PASSWORD,
@@ -30,7 +30,7 @@ def _build_clickhouse_http_command(
     parent_dir, resource, filename="-", clickhouse_uri=""
 ):
     if clickhouse_uri == "":
-        clickhouse_uri = Variable.get("clickhouse_uri", "")
+        clickhouse_uri = config("CLICKHOUSE_URI", "")
 
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
@@ -171,7 +171,7 @@ def _YYYY_MM(start_year):
 
 
 def _build_clickhouse_optimize_http_command(resource, start_year):
-    CLICKHOUSE_URIS = ast.literal_eval(Variable.get("CLICKHOUSE_URIS", ""))
+    CLICKHOUSE_URIS = ast.literal_eval(config("CLICKHOUSE_URIS", ""))
 
     command_list = []
     for partition in _YYYY_MM(start_year):
@@ -186,7 +186,7 @@ def _build_clickhouse_optimize_http_command(resource, start_year):
 
 
 def _build_clickhouse_optimize_deduplicate_http_command(resource):
-    clickhouse_uri = Variable.get("clickhouse_uri", "")
+    clickhouse_uri = config("CLICKHOUSE_URI", "")
     return (
         f"eval ' echo 'OPTIMIZE TABLE {resource} FINAL DEDUPLICATE' "
         f"| curl {clickhouse_uri}:8123?query= --data-binary @- '"
@@ -225,7 +225,7 @@ def _build_export_clickhouse_http_command(
     filename,
     environment,
 ):
-    clickhouse_uri = Variable.get("clickhouse_uri", "")
+    clickhouse_uri = config("CLICKHOUSE_URI", "")
 
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
@@ -324,7 +324,7 @@ def _build_export_clickhouse_http_command_v21(
     filename,
     environment,
 ):
-    clickhouse_uri = Variable.get("CLICKHOUSE_URI_V21", "")
+    clickhouse_uri = config("CLICKHOUSE_URI", "")
 
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
