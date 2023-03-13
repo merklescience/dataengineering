@@ -324,7 +324,7 @@ def _build_export_clickhouse_http_command_v21(
     filename,
     environment,
 ):
-    clickhouse_uri = config("CLICKHOUSE_URI", "")
+    clickhouse_uri = config("CLICKHOUSE_URI_WITH_AUTH", "")
 
     dags_folder = os.environ.get("DAGS_FOLDER", "/home/airflow/gcs/dags")
     query_path = os.path.join(dags_folder, parent_dir, f"{resource}.sql")
