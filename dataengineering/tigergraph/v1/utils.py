@@ -75,6 +75,7 @@ def tg_post_request(tigergraph_request, data, statistic):
 
     try:
         stats = response_json["results"][0]["statistics"]
+        logger.info(f"STATS for pushing data to TG: {stats}")
     except KeyError as e:
         logger.error("Response JSON=`{}`".format(response_json))
         raise exceptions.InvalidPayloadInTigergraphResponse() from e
