@@ -11,8 +11,8 @@ from dataengineering.tigergraph import exceptions
 
 # NOTE: Set GSQL_TIMEOUT to 20 minutes
 # TODO: move this to constants, ask why it's a string.
-GSQL_TIMEOUT = 20 * 60 * 1000
-GSQL_THREAD_LIMIT = 1
+GSQL_TIMEOUT = f"{20 * 60 * 1000}"
+GSQL_THREAD_LIMIT = '1'
 MAX_RETRY_COUNT = 5
 
 
