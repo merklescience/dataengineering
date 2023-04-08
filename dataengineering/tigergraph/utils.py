@@ -50,7 +50,7 @@ def load_dataframe_to_tigergraph(
         data = filtered_df.to_csv(quoting=csv.QUOTE_NONNUMERIC)
         statistic = loading_map[loading_map_key]["stats"]
         tg_post_request(
-            tg_request=loading_request,
+            tigergraph_request=loading_request,
             data=data,
             statistic=statistic,
         )
@@ -73,7 +73,7 @@ def write_chainstate_to_tigergraph(
     chain_state = chain_state[["chain", "price_usd", "block_date_time", "block_number"]]
     loading_job = loading_map["chain_state"]["loading_job"]
     tg_post_request(
-        tg_request=form_tg_loading_request(
+        tigergraph_request=form_tg_loading_request(
             tg_ip=tigergraph_host,
             chain=chain,
             loading_job=loading_job,
