@@ -175,7 +175,6 @@ class ClickHouseBashHook(object):
             raise ValueError(f"Raw Response Code = {raw_response_code}")
         response_code = int(raw_response_code)
         logger.debug(f"Got response code: {response_code}")
-        logger.debug
         if int(result.stdout.decode()) != 200:
             raise Exception(
                 f"HTTP response code {response_code} received instead of 200"
@@ -225,12 +224,14 @@ class ClickHouseBashHook(object):
             "-o",
             filename,
         ]
+        logger.info(f"Curl request: {curl_request}")
         # if compress_data:
         #     curl_request[1] = curl_request[1] + "&enable_http_compression=1"
         #     curl_request.extend(["-H", "'Accept-Encoding: gzip'"])
         result = subprocess.run(
             curl_request, stdin=echo_query.stdout, stdout=subprocess.PIPE, timeout=1800
         )
+        logger.info(f"curl result: {result}")
         logger.debug("Curl returned,terminating echo subprocess")
         echo_query.terminate()
         logger.debug("Echo process terminated ,checking http response code")
