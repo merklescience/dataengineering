@@ -62,7 +62,7 @@ def tg_post_request(tigergraph_request, data, statistic):
     """
     logger.debug(f"Request to Tigergraph URL={tigergraph_request}")
     response = requests.post(
-        tigergraph_request, data=data, headers={"GSQL-TIMEOUT": GSQL_TIMEOUT, "GSQL-THREAD-LIMIT": GSQL_THREAD_LIMIT}
+        tigergraph_request, data=data.encode('utf-8'), headers={"GSQL-TIMEOUT": GSQL_TIMEOUT, "GSQL-THREAD-LIMIT": GSQL_THREAD_LIMIT}
     )
     response.raise_for_status()
     try:
