@@ -39,6 +39,10 @@ def make_ch_request(query: str, ch_conn_id: str, exception_msg: str) -> dict:
     data = json.loads(resp.content.decode())
     if isinstance(data, int):
         return {"total_count": data}
+    
+    if len(data.get("data")) == 0:
+        return {"total_count":0}    
+        
     return data.get("data")[0]
 
 
@@ -397,7 +401,12 @@ def validate_bt_bq_counts(
     if bq_result is not None:
         if len(bq_result) > 1:
             raise Exception("More than 1 result from BQ while count check")
-        bq_count = bq_result[0].get("bq_no_of_txns")
+        
+        if len(bq_result) == 0:
+            bq_count = 0
+        else:
+            bq_count = bq_result[0].get("bq_no_of_txns")
+            
     data = make_ch_request(
         query=jinja2.Template(ch_check_query).render(ds=kwargs.get("ds")),
         ch_conn_id=ch_conn_id,
