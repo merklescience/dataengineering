@@ -210,6 +210,8 @@ class ClickHouseBashHook(object):
             sql = sql + " FORMAT CSVWithNames"
         elif file_format == "parquet":
             sql = sql + " FORMAT Parquet"
+        elif file_format == "json":
+            sql = sql + " FORMAT JSONEachRow"
         logger.debug("Echoing Query")
         echo_query = subprocess.Popen(["echo", sql], stdout=subprocess.PIPE)
         echo_query.wait(timeout=10)
