@@ -1,5 +1,5 @@
 """DAGFactor builder for dags with required metadata."""
-
+from functools import partial
 
 class DAGFactory:
     """Class that provides useful method to build an Airflow DAG"""
@@ -21,6 +21,7 @@ class DAGFactory:
         wait_for_downstream=True,
         default_args=dict(),
         user_defined_macros=dict(),
+        success_url=None,
     ):
         """
         params:
@@ -64,8 +65,8 @@ class DAGFactory:
 
         from airflow.models import DAG
 
-        from dataengineering.utils.notifications import task_fail_slack_alert
-
+        from dataengineering.utils.notifications import task_fail_slack_alert, task_uptime_hearbeat
+        
         DEFAULT_ARGS = {
             "owner": owner,
             "retries": 5,
@@ -76,7 +77,9 @@ class DAGFactory:
         }
         if end_date:
             DEFAULT_ARGS["end_date"] = end_date
-
+        
+        task_success_alert = partial(task_uptime_hearbeat, url=success_url)
+        
         DEFAULT_ARGS.update(default_args)
         dagargs = {
             "default_args": DEFAULT_ARGS,
@@ -87,6 +90,7 @@ class DAGFactory:
             "max_active_runs": max_active_runs,
             "concurrency": max_active_tasks,
             "on_failure_callback": task_fail_slack_alert,
+            "on_success_callback": task_success_alert,
             "catchup": catchup,
         }
 
