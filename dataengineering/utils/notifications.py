@@ -28,3 +28,18 @@ def task_fail_slack_alert(context):
         requests.post(slack_webhook_url, data=json.dumps({"text": slack_msg}))
     else:
         logging.warning(f"Not writing to slack because server_env={server_env}")
+
+def task_uptime_hearbeat(context, url=None):
+    """
+    Sends a GET request to a URL (better uptime currently) 
+    This functions needs to be attached to all the tasks on DAGs so that health can be monitored
+    this URL can accept a HEAD, GET, or a POST request 
+    """
+    server_env = config("SERVER_ENV", ServerEnv.LOCAL, cast=str)
+    if url:
+        if server_env == ServerEnv.PRODUCTION:
+            requests.get(url)
+        else:
+            logging.warning(f"Not sending to hearbeat service because server_env={server_env}")
+    else:
+        logging.warning(f"Not sending to hearbeat service because no url provided")
